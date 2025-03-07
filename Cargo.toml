@@ -1,0 +1,38 @@
+[package]
+name = "benzina"
+version = "0.1.0"
+description = "Various helper macros for `diesel`"
+categories = ["database"]
+keywords = ["diesel", "postgresql", "enum", "macro"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/M4SS-Code/benzina"
+rust-version = "1.83"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1.0.94"
+quote = "1.0.39"
+syn = { version = "2.0.99", default-features = false, features = ["derive", "parsing", "printing", "proc-macro"] }
+heck = "0.5.0"
+
+[dev-dependencies]
+diesel = { version = "2", default-features = false, features = ["postgres_backend"] }
+
+[lints.rust]
+unsafe_code = "deny"
+unreachable_pub = "deny"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+module_name_repetitions = "allow"
+await_holding_refcell_ref = "deny"
+map_unwrap_or = "warn"
+needless_lifetimes = "warn"
+needless_raw_string_hashes = "warn"
+redundant_closure_for_method_calls = "warn"
+semicolon_if_nothing_returned = "warn"
+str_to_string = "warn"
+clone_on_ref_ptr = "warn"

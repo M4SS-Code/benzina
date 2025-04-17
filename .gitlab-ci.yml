@@ -31,4 +31,4 @@ rust:test:
   before_script:
     - apk add musl-dev
   script:
-    - cargo test
+    - cargo test --all-features

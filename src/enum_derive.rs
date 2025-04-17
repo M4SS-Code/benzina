@@ -158,6 +158,7 @@ impl ToTokens for Enum {
             }
         });
 
+        #[cfg(feature = "postgres")]
         tokens.append_all(quote! {
             #[automatically_derived]
             impl ::diesel::deserialize::FromSql<#sql_type, ::diesel::pg::Pg> for #ident {

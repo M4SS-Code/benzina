@@ -63,4 +63,4 @@ jobs:
           toolchain: ${{ matrix.rust }}
 
       - name: Run tests
-        run: cargo test
+        run: cargo test --all-features

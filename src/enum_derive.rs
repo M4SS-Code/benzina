@@ -189,6 +189,38 @@ impl ToTokens for Enum {
                 }
             }
         });
+
+        #[cfg(feature = "mysql")]
+        tokens.append_all(quote! {
+            #[automatically_derived]
+            impl ::diesel::deserialize::FromSql<#sql_type, ::diesel::mysql::Mysql> for #ident {
+                fn from_sql(bytes: ::diesel::mysql::MysqlValue<'_>) -> ::diesel::deserialize::Result<Self> {
+                    match Self::__benzina01_from_bytes(bytes.as_bytes()) {
+                        ::std::option::Option::Some(this) => ::std::result::Result::Ok(this),
+                        ::std::option::Option::None => ::std::result::Result::Err("Unrecognized enum variant".into()),
+                    }
+                }
+            }
+
+            #[automatically_derived]
+            impl ::diesel::serialize::ToSql<#sql_type, ::diesel::mysql::Mysql> for #ident {
+                fn to_sql<'b>(&'b self, out: &mut ::diesel::serialize::Output<'b, '_, ::diesel::mysql::Mysql>) -> ::diesel::serialize::Result {
+                    let sql_val = self.__benzina01_as_str();
+                    ::std::io::Write::write_all(out, sql_val.as_bytes())?;
+
+                    ::std::result::Result::Ok(diesel::serialize::IsNull::No)
+                }
+            }
+
+            #[automatically_derived]
+            impl ::diesel::deserialize::Queryable<#sql_type, ::diesel::mysql::Mysql> for #ident {
+                type Row = Self;
+
+                fn build(row: Self::Row) -> ::diesel::deserialize::Result<Self> {
+                    ::std::result::Result::Ok(row)
+                }
+            }
+        });
     }
 }
 

@@ -1,6 +1,6 @@
 [package]
 name = "benzina"
-version = "0.1.0"
+version = "0.2.0"
 description = "Various helper macros for `diesel`"
 categories = ["database"]
 keywords = ["diesel", "postgresql", "enum", "macro"]

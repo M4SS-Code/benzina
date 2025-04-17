@@ -145,7 +145,7 @@ impl ToTokens for Enum {
                 fn from_sql(bytes: ::diesel::pg::PgValue<'_>) -> ::diesel::deserialize::Result<Self> {
                     match bytes.as_bytes() {
                         #(#from_sql_arms)*
-                        _ => Err("Unrecognized enum variant".into()),
+                        _ => ::std::result::Result::Err("Unrecognized enum variant".into()),
                     }
                 }
             }
@@ -158,7 +158,7 @@ impl ToTokens for Enum {
                     };
                     ::std::io::Write::write_all(out, sql_val.as_bytes())?;
 
-                    Ok(diesel::serialize::IsNull::No)
+                    ::std::result::Result::Ok(diesel::serialize::IsNull::No)
                 }
             }
 
@@ -166,8 +166,8 @@ impl ToTokens for Enum {
             impl ::diesel::deserialize::Queryable<#sql_type, ::diesel::pg::Pg> for #ident {
                 type Row = Self;
 
-                fn build(row: Self::Row) -> diesel::deserialize::Result<Self> {
-                    Ok(row)
+                fn build(row: Self::Row) -> ::diesel::deserialize::Result<Self> {
+                    ::std::result::Result::Ok(row)
                 }
             }
         });

@@ -132,20 +132,39 @@ impl ToTokens for Enum {
             variants,
         } = &self;
 
-        let from_sql_arms = variants
+        let from_bytes_arms = variants
             .iter()
-            .map(|variant| variant.gen_from_sql(*rename_all));
-        let to_sql_arms = variants
+            .map(|variant| variant.gen_from_bytes(*rename_all));
+        let to_str_arms = variants
             .iter()
-            .map(|variant| variant.gen_to_sql(*rename_all));
+            .map(|variant| variant.gen_to_str(*rename_all));
+
+        tokens.append_all(quote! {
+            impl #ident {
+                #[doc(hidden)]
+                fn __benzina01_from_bytes(val: &[u8]) -> ::std::option::Option<Self> {
+                    match val {
+                        #(#from_bytes_arms)*
+                        _ => ::std::option::Option::None,
+                    }
+                }
+
+                #[doc(hidden)]
+                fn __benzina01_as_str(&self) -> &'static str {
+                    match self {
+                        #(#to_str_arms)*
+                    }
+                }
+            }
+        });
 
         tokens.append_all(quote! {
             #[automatically_derived]
             impl ::diesel::deserialize::FromSql<#sql_type, ::diesel::pg::Pg> for #ident {
                 fn from_sql(bytes: ::diesel::pg::PgValue<'_>) -> ::diesel::deserialize::Result<Self> {
-                    match bytes.as_bytes() {
-                        #(#from_sql_arms)*
-                        _ => ::std::result::Result::Err("Unrecognized enum variant".into()),
+                    match Self::__benzina01_from_bytes(bytes.as_bytes()) {
+                        ::std::option::Option::Some(this) => ::std::result::Result::Ok(this),
+                        ::std::option::Option::None => ::std::result::Result::Err("Unrecognized enum variant".into()),
                     }
                 }
             }
@@ -153,9 +172,7 @@ impl ToTokens for Enum {
             #[automatically_derived]
             impl ::diesel::serialize::ToSql<#sql_type, ::diesel::pg::Pg> for #ident {
                 fn to_sql<'b>(&'b self, out: &mut ::diesel::serialize::Output<'b, '_, ::diesel::pg::Pg>) -> ::diesel::serialize::Result {
-                    let sql_val = match self {
-                        #(#to_sql_arms)*
-                    };
+                    let sql_val = self.__benzina01_as_str();
                     ::std::io::Write::write_all(out, sql_val.as_bytes())?;
 
                     ::std::result::Result::Ok(diesel::serialize::IsNull::No)
@@ -175,10 +192,10 @@ impl ToTokens for Enum {
 }
 
 impl EnumVariant {
-    fn gen_from_sql(&self, rename_rule: RenameRule) -> impl ToTokens + use<'_> {
-        struct EnumVariantFromSql<'a>(&'a EnumVariant, RenameRule);
+    fn gen_from_bytes(&self, rename_rule: RenameRule) -> impl ToTokens + use<'_> {
+        struct EnumVariantFromBytes<'a>(&'a EnumVariant, RenameRule);
 
-        impl ToTokens for EnumVariantFromSql<'_> {
+        impl ToTokens for EnumVariantFromBytes<'_> {
             fn to_tokens(&self, tokens: &mut TokenStream) {
                 let Self(
                     EnumVariant {
@@ -196,18 +213,18 @@ impl EnumVariant {
                 let original_name_ident = Ident::new(original_name, *span);
                 let rename_bytes = LitByteStr::new(rename.as_bytes(), *span);
                 tokens.append_all(quote! {
-                    #rename_bytes => ::std::result::Result::Ok(Self::#original_name_ident),
+                    #rename_bytes => ::std::option::Option::Some(Self::#original_name_ident),
                 });
             }
         }
 
-        EnumVariantFromSql(self, rename_rule)
+        EnumVariantFromBytes(self, rename_rule)
     }
 
-    fn gen_to_sql(&self, rename_rule: RenameRule) -> impl ToTokens + use<'_> {
-        struct EnumVariantToSql<'a>(&'a EnumVariant, RenameRule);
+    fn gen_to_str(&self, rename_rule: RenameRule) -> impl ToTokens + use<'_> {
+        struct EnumVariantToStr<'a>(&'a EnumVariant, RenameRule);
 
-        impl ToTokens for EnumVariantToSql<'_> {
+        impl ToTokens for EnumVariantToStr<'_> {
             fn to_tokens(&self, tokens: &mut TokenStream) {
                 let Self(
                     EnumVariant {
@@ -229,6 +246,6 @@ impl EnumVariant {
             }
         }
 
-        EnumVariantToSql(self, rename_rule)
+        EnumVariantToStr(self, rename_rule)
     }
 }

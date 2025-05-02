@@ -179,15 +179,6 @@ impl ToTokens for Enum {
                     ::std::result::Result::Ok(diesel::serialize::IsNull::No)
                 }
             }
-
-            #[automatically_derived]
-            impl ::diesel::deserialize::Queryable<#sql_type, ::diesel::pg::Pg> for #ident {
-                type Row = Self;
-
-                fn build(row: Self::Row) -> ::diesel::deserialize::Result<Self> {
-                    ::std::result::Result::Ok(row)
-                }
-            }
         });
 
         #[cfg(feature = "mysql")]
@@ -209,15 +200,6 @@ impl ToTokens for Enum {
                     ::std::io::Write::write_all(out, sql_val.as_bytes())?;
 
                     ::std::result::Result::Ok(diesel::serialize::IsNull::No)
-                }
-            }
-
-            #[automatically_derived]
-            impl ::diesel::deserialize::Queryable<#sql_type, ::diesel::mysql::Mysql> for #ident {
-                type Row = Self;
-
-                fn build(row: Self::Row) -> ::diesel::deserialize::Result<Self> {
-                    ::std::result::Result::Ok(row)
                 }
             }
         });

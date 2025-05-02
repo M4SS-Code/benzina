@@ -26,6 +26,7 @@ mod rename_rule;
 /// ### Rust enum
 ///
 /// ```rust
+/// # use benzina_derive as benzina;
 /// # fn main() {}
 ///
 /// #[derive(Debug, Copy, Clone, benzina::Enum)]

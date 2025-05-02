@@ -1,5 +1,11 @@
-[package]
-name = "benzina"
+[workspace]
+members = [
+    "benzina",
+    "benzina-derive",
+]
+resolver = "2"
+
+[workspace.package]
 version = "0.2.0"
 description = "Various helper macros for `diesel`"
 categories = ["database"]
@@ -9,30 +15,11 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/M4SS-Code/benzina"
 rust-version = "1.83"
 
-[lib]
-proc-macro = true
-
-[package.metadata.docs.rs]
-features = ["postgres", "mysql"]
-
-[dependencies]
-proc-macro2 = "1.0.94"
-quote = "1.0.39"
-syn = { version = "2.0.99", default-features = false, features = ["derive", "parsing", "printing", "proc-macro"] }
-heck = "0.5.0"
-
-[dev-dependencies]
-diesel = { version = "2", default-features = false, features = ["postgres_backend", "mysql_backend"] }
-
-[features]
-postgres = []
-mysql = []
-
-[lints.rust]
+[workspace.lints.rust]
 unsafe_code = "deny"
 unreachable_pub = "deny"
 
-[lints.clippy]
+[workspace.lints.clippy]
 pedantic = { level = "warn", priority = -1 }
 module_name_repetitions = "allow"
 await_holding_refcell_ref = "deny"

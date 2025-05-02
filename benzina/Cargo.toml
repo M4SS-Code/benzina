@@ -1,0 +1,25 @@
+[package]
+name = "benzina"
+version.workspace = true
+description.workspace = true
+categories.workspace = true
+keywords.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[package.metadata.docs.rs]
+features = ["postgres", "mysql"]
+
+[dependencies]
+benzina-derive = { path = "../benzina-derive", version = "=0.2.0", optional = true }
+
+[features]
+default = ["derive"]
+derive = ["dep:benzina-derive"]
+postgres = ["benzina-derive?/postgres"]
+mysql = ["benzina-derive?/mysql"]
+
+[lints]
+workspace = true

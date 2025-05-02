@@ -52,8 +52,8 @@ impl Enum {
             attr.parse_nested_meta(|meta| {
                 if meta.path.is_ident("sql_type") {
                     meta.input.parse::<Token![=]>()?;
-                    let val: LitStr = meta.input.parse()?;
-                    try_set!(sql_type, val.parse()?, val);
+                    let val: Type = meta.input.parse()?;
+                    try_set!(sql_type, val, val);
                 } else if meta.path.is_ident("rename_all") {
                     meta.input.parse::<Token![=]>()?;
                     let val: LitStr = meta.input.parse()?;

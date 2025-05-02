@@ -37,7 +37,7 @@ mod rename_rule;
 /// #[derive(Debug, Copy, Clone, AsExpression, FromSqlRow, benzina::Enum)]
 /// #[diesel(sql_type = crate::schema::sql_types::Animal)]
 /// #[benzina(
-///     sql_type = "crate::schema::sql_types::Animal",
+///     sql_type = crate::schema::sql_types::Animal,
 ///     rename_all = "snake_case"
 /// )]
 /// pub enum Animal {

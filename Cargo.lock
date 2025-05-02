@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "benzina"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "benzina-derive",
  "diesel",
@@ -14,7 +14,7 @@ dependencies = [
 
 [[package]]
 name = "benzina-derive"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "diesel",
  "heck",

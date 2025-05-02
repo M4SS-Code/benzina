@@ -142,7 +142,7 @@ impl ToTokens for Enum {
         tokens.append_all(quote! {
             impl #ident {
                 #[doc(hidden)]
-                fn __benzina02_from_bytes(val: &[u8]) -> ::std::option::Option<Self> {
+                fn __benzina03_from_bytes(val: &[u8]) -> ::std::option::Option<Self> {
                     match val {
                         #(#from_bytes_arms)*
                         _ => ::std::option::Option::None,
@@ -150,7 +150,7 @@ impl ToTokens for Enum {
                 }
 
                 #[doc(hidden)]
-                fn __benzina02_as_str(&self) -> &'static str {
+                fn __benzina03_as_str(&self) -> &'static str {
                     match self {
                         #(#to_str_arms)*
                     }
@@ -163,7 +163,7 @@ impl ToTokens for Enum {
             #[automatically_derived]
             impl ::diesel::deserialize::FromSql<#sql_type, ::diesel::pg::Pg> for #ident {
                 fn from_sql(bytes: ::diesel::pg::PgValue<'_>) -> ::diesel::deserialize::Result<Self> {
-                    match Self::__benzina02_from_bytes(bytes.as_bytes()) {
+                    match Self::__benzina03_from_bytes(bytes.as_bytes()) {
                         ::std::option::Option::Some(this) => ::std::result::Result::Ok(this),
                         ::std::option::Option::None => ::std::result::Result::Err("Unrecognized enum variant".into()),
                     }
@@ -173,7 +173,7 @@ impl ToTokens for Enum {
             #[automatically_derived]
             impl ::diesel::serialize::ToSql<#sql_type, ::diesel::pg::Pg> for #ident {
                 fn to_sql<'b>(&'b self, out: &mut ::diesel::serialize::Output<'b, '_, ::diesel::pg::Pg>) -> ::diesel::serialize::Result {
-                    let sql_val = self.__benzina02_as_str();
+                    let sql_val = self.__benzina03_as_str();
                     ::std::io::Write::write_all(out, sql_val.as_bytes())?;
 
                     ::std::result::Result::Ok(diesel::serialize::IsNull::No)
@@ -186,7 +186,7 @@ impl ToTokens for Enum {
             #[automatically_derived]
             impl ::diesel::deserialize::FromSql<#sql_type, ::diesel::mysql::Mysql> for #ident {
                 fn from_sql(bytes: ::diesel::mysql::MysqlValue<'_>) -> ::diesel::deserialize::Result<Self> {
-                    match Self::__benzina02_from_bytes(bytes.as_bytes()) {
+                    match Self::__benzina03_from_bytes(bytes.as_bytes()) {
                         ::std::option::Option::Some(this) => ::std::result::Result::Ok(this),
                         ::std::option::Option::None => ::std::result::Result::Err("Unrecognized enum variant".into()),
                     }
@@ -196,7 +196,7 @@ impl ToTokens for Enum {
             #[automatically_derived]
             impl ::diesel::serialize::ToSql<#sql_type, ::diesel::mysql::Mysql> for #ident {
                 fn to_sql<'b>(&'b self, out: &mut ::diesel::serialize::Output<'b, '_, ::diesel::mysql::Mysql>) -> ::diesel::serialize::Result {
-                    let sql_val = self.__benzina02_as_str();
+                    let sql_val = self.__benzina03_as_str();
                     ::std::io::Write::write_all(out, sql_val.as_bytes())?;
 
                     ::std::result::Result::Ok(diesel::serialize::IsNull::No)

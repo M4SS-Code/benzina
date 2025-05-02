@@ -10,16 +10,23 @@ repository.workspace = true
 rust-version.workspace = true
 
 [package.metadata.docs.rs]
-features = ["postgres", "mysql"]
+features = ["postgres", "mysql", "serde"]
 
 [dependencies]
+diesel = { version = "2.2", default-features = false, optional = true }
+serde = { version = "1", optional = true }
+utoipa = { version = "5", optional = true }
 benzina-derive = { path = "../benzina-derive", version = "=0.2.0", optional = true }
 
 [features]
 default = ["derive"]
 derive = ["dep:benzina-derive"]
-postgres = ["benzina-derive?/postgres"]
+
+postgres = ["benzina-derive?/postgres", "diesel", "diesel/postgres_backend"]
 mysql = ["benzina-derive?/mysql"]
+
+serde = ["dep:serde"]
+utoipa = ["dep:utoipa"]
 
 [lints]
 workspace = true

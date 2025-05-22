@@ -67,6 +67,72 @@ macro_rules! impl_numbers {
                     // SAFETY: `&u16`/`&u32`/`&u64` can be interpreted as `&i16`/`&i32`/`&i64` respectively
                     unsafe { &*ptr::from_ref(self.get_ref()).cast::<$inner_signed>() }
                 }
+
+                #[must_use]
+                pub const fn checked_add(self, rhs: Self) -> Option<Self> {
+                    let Some(res) = self.get().checked_add(rhs.get()) else {
+                        return None;
+                    };
+
+                    if res <= Self::MAX.get() {
+                        Some(Self(res))
+                    } else {
+                        None
+                    }
+                }
+
+                #[must_use]
+                pub const fn saturating_add(self, rhs: Self) -> Self {
+                    match self.checked_add(rhs)  {
+                        Some(res) => res,
+                        None => Self::MAX,
+                    }
+                }
+
+                #[must_use]
+                pub const fn checked_sub(self, rhs: Self) -> Option<Self> {
+                    match self.get().checked_sub(rhs.get()) {
+                        Some(res) => Some(Self(res)),
+                        None => None,
+                    }
+                }
+
+                #[must_use]
+                pub const fn saturating_sub(self, rhs: Self) -> Self {
+                    match self.checked_sub(rhs)  {
+                        Some(res) => res,
+                        None => Self::MIN,
+                    }
+                }
+
+                #[must_use]
+                pub const fn checked_mul(self, rhs: Self) -> Option<Self> {
+                    let Some(res) = self.get().checked_mul(rhs.get()) else {
+                        return None;
+                    };
+
+                    if res <= Self::MAX.get() {
+                        Some(Self(res))
+                    } else {
+                        None
+                    }
+                }
+
+                #[must_use]
+                pub const fn saturating_mul(self, rhs: Self) -> Self {
+                    match self.checked_mul(rhs)  {
+                        Some(res) => res,
+                        None => Self::MAX,
+                    }
+                }
+
+                #[must_use]
+                pub const fn checked_div(self, rhs: Self) -> Option<Self> {
+                    match self.get().checked_div(rhs.get())  {
+                        Some(res) => Some(Self(res)),
+                        None => None,
+                    }
+                }
             }
 
             impl Display for $type {

@@ -9,5 +9,7 @@ pub mod error;
 mod int;
 #[cfg(all(feature = "serde", feature = "postgres"))]
 mod serde;
+#[cfg(feature = "typed-uuid")]
+mod typed_uuid;
 #[cfg(all(feature = "utoipa", feature = "postgres"))]
 mod utoipa;

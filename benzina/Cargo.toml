@@ -17,15 +17,17 @@ diesel = { version = "2.2", default-features = false, optional = true }
 serde = { version = "1", optional = true }
 utoipa = { version = "5", optional = true }
 benzina-derive = { path = "../benzina-derive", version = "=0.3.1", optional = true }
+uuid = { version = ">=0.7.0, <2.0.0", default-features = false, optional = true }
 
 [features]
 default = ["derive"]
 derive = ["dep:benzina-derive"]
 
 postgres = ["benzina-derive?/postgres", "diesel", "diesel/postgres_backend"]
+typed-uuid = ["postgres", "diesel/uuid", "dep:uuid"]
 mysql = ["benzina-derive?/mysql"]
 
-serde = ["dep:serde"]
+serde = ["dep:serde", "uuid?/serde"]
 utoipa = ["dep:utoipa"]
 
 [lints]

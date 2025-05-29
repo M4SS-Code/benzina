@@ -8,6 +8,17 @@
 /// order to provide the guarantee that the `UUID` is valid. However, it is possible to choose to
 /// add traits and methods to customize the behavior.
 ///
+#[cfg_attr(
+    not(feature = "example-generated"),
+    doc = "To see the documentation of a generated typed `UUID`, consider re-building the \
+        documentation with the feature `example-generated` enabled."
+)]
+#[cfg_attr(
+    feature = "example-generated",
+    doc = "You can see the documentation for an example generated `UUID` struct \
+        [`here`](crate::example_generated::FooId)."
+)]
+///
 /// [`Uuid`]: ::uuid::Uuid
 ///
 /// # Examples
@@ -146,12 +157,12 @@ macro_rules! typed_uuid {
 
             $crate::__typed_uuid__forward_from!(
                 $name:
-                    ::uuid::fmt::Braced,
-                    ::uuid::fmt::Hyphenated,
-                    ::uuid::fmt::Simple,
-                    ::uuid::fmt::Urn,
-                    ::std::string::String,
-                    ::std::vec::Vec<u8>,
+                ::uuid::fmt::Braced,
+                ::uuid::fmt::Hyphenated,
+                ::uuid::fmt::Simple,
+                ::uuid::fmt::Urn,
+                ::std::string::String,
+                ::std::vec::Vec<u8>,
             );
 
             impl ::std::fmt::Display for $name {
@@ -173,7 +184,7 @@ macro_rules! typed_uuid {
             }
 
             $crate::__typed_uuid__impl_serde!($name);
-        )+
+            )+
     };
 }
 

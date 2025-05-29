@@ -30,5 +30,7 @@ mysql = ["benzina-derive?/mysql"]
 serde = ["dep:serde", "uuid?/serde"]
 utoipa = ["dep:utoipa"]
 
+example-generated = ["typed-uuid"]
+
 [lints]
 workspace = true

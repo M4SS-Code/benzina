@@ -10,7 +10,7 @@ repository.workspace = true
 rust-version.workspace = true
 
 [package.metadata.docs.rs]
-features = ["postgres", "mysql", "serde"]
+features = ["postgres", "mysql", "serde", "typed-uuid", "example-generated"]
 
 [dependencies]
 diesel = { version = "2.2", default-features = false, optional = true }

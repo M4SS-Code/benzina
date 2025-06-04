@@ -11,6 +11,7 @@ rust-version.workspace = true
 
 [package.metadata.docs.rs]
 features = ["postgres", "mysql", "serde", "typed-uuid", "example-generated"]
+rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 diesel = { version = "2.2", default-features = false, optional = true }

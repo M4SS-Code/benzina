@@ -1,3 +1,5 @@
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+
 #[cfg(feature = "postgres")]
 pub use self::int::{U15, U31, U63};
 #[cfg(feature = "derive")]

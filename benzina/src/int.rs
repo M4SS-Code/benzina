@@ -2,6 +2,7 @@ use std::{
     error::Error,
     fmt::{self, Display},
     ptr,
+    str::FromStr,
 };
 
 use diesel::{
@@ -12,7 +13,7 @@ use diesel::{
     sql_types::{BigInt, Integer, SmallInt},
 };
 
-use crate::error::TryFromIntError;
+use crate::error::{ParseIntError, TryFromIntError};
 
 macro_rules! impl_numbers {
     ($($type:ident => $inner:ident, $inner_signed:ident, $sql_type:ident),*) => {
@@ -132,6 +133,17 @@ macro_rules! impl_numbers {
                         Some(res) => Some(Self(res)),
                         None => None,
                     }
+                }
+            }
+
+            impl FromStr for $type {
+                type Err = ParseIntError;
+
+                fn from_str(value: &str) -> Result<Self, Self::Err> {
+                    value
+                        .parse::<$inner>()
+                        .map_err(ParseIntError::Parse)
+                        .and_then(|value| value.try_into().map_err(ParseIntError::OutOfRange))
                 }
             }
 

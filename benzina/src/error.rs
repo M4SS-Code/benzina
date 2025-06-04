@@ -14,3 +14,27 @@ impl Display for TryFromIntError {
 }
 
 impl Error for TryFromIntError {}
+
+#[derive(Debug, Clone)]
+pub enum ParseIntError {
+    Parse(std::num::ParseIntError),
+    OutOfRange(TryFromIntError),
+}
+
+impl Display for ParseIntError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Self::Parse(_err) => "could not parse integer",
+            Self::OutOfRange(_err) => "integer is out of range",
+        })
+    }
+}
+
+impl Error for ParseIntError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Parse(err) => Some(err),
+            Self::OutOfRange(err) => Some(err),
+        }
+    }
+}

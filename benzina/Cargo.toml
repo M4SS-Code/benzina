@@ -19,6 +19,9 @@ utoipa = { version = "5", optional = true }
 benzina-derive = { path = "../benzina-derive", version = "=0.3.2", optional = true }
 uuid = { version = ">=0.7.0, <2.0.0", default-features = false, optional = true }
 
+[dev-dependencies]
+serde_test =  "1"
+
 [features]
 default = ["derive"]
 derive = ["dep:benzina-derive"]

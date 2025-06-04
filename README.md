@@ -1,6 +1,6 @@
 # Benzina
 
-Work in progress crate containing our own `diesel` extension macros.
+Various helper types and macros for `diesel`.
 
 _benzina_ is _gasoline_ in Italian.
 

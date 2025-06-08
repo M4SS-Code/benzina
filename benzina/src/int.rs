@@ -18,16 +18,37 @@ use crate::error::{ParseIntError, TryFromIntError};
 macro_rules! impl_numbers {
     ($($type:ident => $inner:ident, $inner_signed:ident, $sql_type:ident),*) => {
         $(
+            #[doc = concat!("A positive [`", stringify!($inner_signed), "`]")]
+            #[doc = ""]
+            #[doc = "Represents the positive integer range that a"]
+            #[doc = concat!("`", stringify!($sql_type), "` PostgreSQL column with")]
+            #[doc = "a `>= 0` CHECK constraint is able to represent."]
+            #[doc = ""]
+            #[doc = concat!("This allows safe storage in PostgreSQL as ", stringify!($sql_type), " while maintaining")]
+            #[doc = "non-negative semantics in Rust code."]
+            #[doc = ""]
+            #[doc = "# Examples"]
+            #[doc = ""]
+            #[doc = "```rust"]
+            #[doc = concat!("use benzina::", stringify!($type), ";")]
+            #[doc = ""]
+            #[doc = concat!("let value = ", stringify!($type), "::new(100).unwrap();")]
+            #[doc = concat!("assert_eq!(value.get(), 100);")]
+            #[doc = "```"]
             #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
             #[derive(FromSqlRow, AsExpression)]
             #[diesel(sql_type = $sql_type)]
             pub struct $type($inner);
 
             impl $type {
+                /// The size of this integer type in bits.
                 pub const BITS: u32 = $inner::BITS - 1;
+                /// The smallest value that can be represented by this integer type.
                 pub const MIN: Self = Self(0);
+                /// The largest value that can be represented by this integer type.
                 pub const MAX: Self = Self($inner::MAX >> 1);
 
+                /// Creates a new value from an unsigned integer if it fits within the valid range.
                 #[must_use]
                 pub const fn new(n: $inner) -> Option<Self> {
                     if n <= Self::MAX.get() {
@@ -37,6 +58,7 @@ macro_rules! impl_numbers {
                     }
                 }
 
+                /// Creates a new value from a signed integer if it fits within the valid range.
                 #[expect(clippy::cast_sign_loss, reason = "we assert that `n` is positive")]
                 #[must_use]
                 pub const fn new_signed(n: $inner_signed) -> Option<Self> {
@@ -47,11 +69,13 @@ macro_rules! impl_numbers {
                     }
                 }
 
+                /// Returns the value as an unsigned integer.
                 #[must_use]
                 pub const fn get(self) -> $inner {
                     self.0
                 }
 
+                /// Returns the value as a signed integer.
                 #[expect(clippy::cast_possible_wrap, reason = "the number is in the positive range of the signed output")]
                 #[must_use]
                 pub const fn get_signed(self) -> $inner_signed {
@@ -69,6 +93,7 @@ macro_rules! impl_numbers {
                     unsafe { &*ptr::from_ref(self.get_ref()).cast::<$inner_signed>() }
                 }
 
+                /// Checked integer addition. Computes `self + rhs`, returning `None` if overflow occurred.
                 #[must_use]
                 pub const fn checked_add(self, rhs: Self) -> Option<Self> {
                     let Some(res) = self.get().checked_add(rhs.get()) else {
@@ -82,6 +107,7 @@ macro_rules! impl_numbers {
                     }
                 }
 
+                /// Saturating integer addition. Computes `self + rhs`, saturating at the numeric bounds instead of overflowing.
                 #[must_use]
                 pub const fn saturating_add(self, rhs: Self) -> Self {
                     match self.checked_add(rhs)  {
@@ -90,6 +116,7 @@ macro_rules! impl_numbers {
                     }
                 }
 
+                /// Checked integer addition. Computes `self + rhs`, returning `None` if overflow occurred.
                 #[must_use]
                 pub const fn checked_sub(self, rhs: Self) -> Option<Self> {
                     match self.get().checked_sub(rhs.get()) {
@@ -98,6 +125,7 @@ macro_rules! impl_numbers {
                     }
                 }
 
+                /// Saturating integer subtraction. Computes `self - rhs`, saturating at the numeric bounds instead of overflowing.
                 #[must_use]
                 pub const fn saturating_sub(self, rhs: Self) -> Self {
                     match self.checked_sub(rhs)  {
@@ -106,6 +134,7 @@ macro_rules! impl_numbers {
                     }
                 }
 
+                /// Checked integer multiplication. Computes `self * rhs`, returning `None` if overflow occurred.
                 #[must_use]
                 pub const fn checked_mul(self, rhs: Self) -> Option<Self> {
                     let Some(res) = self.get().checked_mul(rhs.get()) else {
@@ -119,6 +148,7 @@ macro_rules! impl_numbers {
                     }
                 }
 
+                /// Saturating integer multiplication. Computes `self * rhs`, saturating at the numeric bounds instead of overflowing.
                 #[must_use]
                 pub const fn saturating_mul(self, rhs: Self) -> Self {
                     match self.checked_mul(rhs)  {
@@ -127,6 +157,7 @@ macro_rules! impl_numbers {
                     }
                 }
 
+                /// Checked integer division. Computes `self / rhs`, returning `None` if `rhs == 0`.
                 #[must_use]
                 pub const fn checked_div(self, rhs: Self) -> Option<Self> {
                     match self.get().checked_div(rhs.get())  {

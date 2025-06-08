@@ -94,17 +94,13 @@ macro_rules! impl_numbers {
                 }
 
                 /// Checked integer addition. Computes `self + rhs`, returning `None` if overflow occurred.
+                #[expect(clippy::cast_sign_loss, reason = "`checked_add` of `$inner_signed` integers returns `$inner_signed` in range of `$inner`")]
                 #[must_use]
                 pub const fn checked_add(self, rhs: Self) -> Option<Self> {
-                    let Some(res) = self.get().checked_add(rhs.get()) else {
+                    let Some(res) = self.get_signed().checked_add(rhs.get_signed()) else {
                         return None;
                     };
-
-                    if res <= Self::MAX.get() {
-                        Some(Self(res))
-                    } else {
-                        None
-                    }
+                    Some(Self(res as $inner))
                 }
 
                 /// Saturating integer addition. Computes `self + rhs`, saturating at the numeric bounds instead of overflowing.
@@ -135,17 +131,13 @@ macro_rules! impl_numbers {
                 }
 
                 /// Checked integer multiplication. Computes `self * rhs`, returning `None` if overflow occurred.
+                #[expect(clippy::cast_sign_loss, reason = "`checked_mul` of `$inner_signed` integers returns `$inner_signed` in range of `$inner`")]
                 #[must_use]
                 pub const fn checked_mul(self, rhs: Self) -> Option<Self> {
-                    let Some(res) = self.get().checked_mul(rhs.get()) else {
+                    let Some(res) = self.get_signed().checked_mul(rhs.get_signed()) else {
                         return None;
                     };
-
-                    if res <= Self::MAX.get() {
-                        Some(Self(res))
-                    } else {
-                        None
-                    }
+                    Some(Self(res as $inner))
                 }
 
                 /// Saturating integer multiplication. Computes `self * rhs`, saturating at the numeric bounds instead of overflowing.

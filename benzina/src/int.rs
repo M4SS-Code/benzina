@@ -62,7 +62,7 @@ macro_rules! impl_numbers {
                 #[expect(clippy::cast_sign_loss, reason = "we assert that `n` is positive")]
                 #[must_use]
                 pub const fn new_signed(n: $inner_signed) -> Option<Self> {
-                    if n >= Self::MIN.get_signed() && n <= Self::MAX.get_signed() {
+                    if n >= Self::MIN.get_signed() {
                         Some(Self(n as $inner))
                     } else {
                         None

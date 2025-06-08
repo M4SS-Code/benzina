@@ -234,3 +234,159 @@ impl_numbers! {
     U31 => u32, i32, Integer,
     U63 => u64, i64, BigInt
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{U15, U31, U63};
+
+    #[test]
+    fn test_constants() {
+        assert_eq!(0, U15::MIN.get());
+        assert_eq!(32767, U15::MAX.get()); // 2^15 - 1
+        assert_eq!(15, U15::BITS);
+
+        assert_eq!(0, U31::MIN.get());
+        assert_eq!(2147483647, U31::MAX.get()); // 2^31 - 1
+        assert_eq!(31, U31::BITS);
+
+        assert_eq!(0, U63::MIN.get());
+        assert_eq!(9223372036854775807, U63::MAX.get()); // 2^63 - 1
+        assert_eq!(63, U63::BITS);
+    }
+
+    #[test]
+    fn test_new() {
+        assert!(U15::new(0).is_some());
+        assert!(U15::new(32767).is_some());
+        assert!(U15::new(32768).is_none());
+        assert!(U15::new(u16::MAX).is_none());
+
+        assert!(U31::new(0).is_some());
+        assert!(U31::new(2147483647).is_some());
+        assert!(U31::new(2147483648).is_none());
+        assert!(U31::new(u32::MAX).is_none());
+
+        assert!(U63::new(0).is_some());
+        assert!(U63::new(9223372036854775807).is_some());
+        assert!(U63::new(9223372036854775808).is_none());
+        assert!(U63::new(u64::MAX).is_none());
+    }
+
+    #[test]
+    fn test_new_signed() {
+        assert!(U15::new_signed(-1).is_none());
+        assert!(U15::new_signed(0).is_some());
+        assert!(U15::new_signed(i16::MAX).is_some());
+
+        assert!(U31::new_signed(-1).is_none());
+        assert!(U31::new_signed(0).is_some());
+        assert!(U31::new_signed(i32::MAX).is_some());
+
+        assert!(U63::new_signed(-1).is_none());
+        assert!(U63::new_signed(0).is_some());
+        assert!(U63::new_signed(i64::MAX).is_some());
+    }
+
+    #[test]
+    fn test_get_methods() {
+        let val = U15::new(1000).unwrap();
+        assert_eq!(1000u16, val.get());
+        assert_eq!(1000i16, val.get_signed());
+    }
+
+    #[test]
+    fn test_checked_arithmetic() {
+        let a = U15::new(100).unwrap();
+        let b = U15::new(200).unwrap();
+
+        // Addition
+        assert_eq!(Some(U15::new(300).unwrap()), a.checked_add(b));
+        assert_eq!(None, U15::MAX.checked_add(U15::new(1).unwrap()));
+
+        // Subtraction
+        assert_eq!(Some(U15::new(100).unwrap()), b.checked_sub(a));
+        assert_eq!(None, a.checked_sub(b));
+
+        // Multiplication
+        assert_eq!(
+            Some(U15::new(200).unwrap()),
+            a.checked_mul(U15::new(2).unwrap())
+        );
+        assert_eq!(None, U15::MAX.checked_mul(U15::new(2).unwrap()));
+
+        // Division
+        assert_eq!(Some(U15::new(2).unwrap()), b.checked_div(a));
+        assert_eq!(None, a.checked_div(U15::new(0).unwrap()));
+    }
+
+    #[test]
+    fn test_saturating_arithmetic() {
+        let a = U15::new(100).unwrap();
+        let b = U15::new(200).unwrap();
+
+        // Addition
+        assert_eq!(U15::new(300).unwrap(), a.saturating_add(b));
+        assert_eq!(U15::MAX, U15::MAX.saturating_add(U15::new(1).unwrap()));
+
+        // Subtraction
+        assert_eq!(U15::new(100).unwrap(), b.saturating_sub(a));
+        assert_eq!(U15::MIN, a.saturating_sub(b));
+
+        // Multiplication
+        assert_eq!(
+            U15::new(200).unwrap(),
+            a.saturating_mul(U15::new(2).unwrap())
+        );
+        assert_eq!(U15::MAX, U15::MAX.saturating_mul(U15::new(2).unwrap()));
+    }
+
+    #[test]
+    fn test_string_parsing() {
+        assert_eq!(U15::new(123).unwrap(), "123".parse::<U15>().unwrap());
+        assert_eq!(
+            U31::new(1000000).unwrap(),
+            "1000000".parse::<U31>().unwrap()
+        );
+        assert_eq!(
+            U63::new(9223372036854775807).unwrap(),
+            "9223372036854775807".parse::<U63>().unwrap()
+        );
+
+        assert!("32768".parse::<U15>().is_err()); // Out of range
+        assert!("-1".parse::<U15>().is_err()); // Negative
+        assert!("abc".parse::<U15>().is_err()); // Invalid format
+    }
+
+    #[test]
+    fn test_display() {
+        assert_eq!("42", U15::new(42).unwrap().to_string());
+    }
+
+    #[test]
+    fn test_conversions() {
+        let val = U15::new(1000).unwrap();
+
+        // From U15
+        assert_eq!(1000, u16::from(val));
+        assert_eq!(1000, i16::from(val));
+
+        // To U15
+        assert_eq!(U15::new(1000).unwrap(), U15::try_from(1000u16).unwrap());
+        assert_eq!(U15::new(1000).unwrap(), U15::try_from(1000i16).unwrap());
+        assert!(U15::try_from(40000u16).is_err());
+        assert!(U15::try_from(-1i16).is_err());
+    }
+
+    #[test]
+    fn test_ordering() {
+        let a = U15::new(100).unwrap();
+        let b = U15::new(200).unwrap();
+        let c = U15::new(100).unwrap();
+
+        assert!(a < b);
+        assert!(b > a);
+        assert_eq!(a, c);
+        assert!(a <= c);
+        assert!(a >= c);
+    }
+}

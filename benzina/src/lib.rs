@@ -5,6 +5,8 @@ pub use self::int::{U15, U31, U63};
 #[cfg(feature = "derive")]
 pub use benzina_derive::Enum;
 
+#[doc(hidden)]
+pub mod __private;
 #[cfg(feature = "postgres")]
 pub mod error;
 #[cfg(feature = "example-generated")]

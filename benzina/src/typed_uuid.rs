@@ -318,7 +318,7 @@ macro_rules! typed_uuid {
             }
 
             $crate::__typed_uuid__impl_serde!($name);
-            )+
+        )+
     };
 }
 

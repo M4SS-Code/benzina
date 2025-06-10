@@ -81,10 +81,7 @@ macro_rules! typed_uuid {
                 $crate::__private::std::cmp::PartialOrd,
                 $crate::__private::std::cmp::Ord,
                 $crate::__private::std::hash::Hash,
-                $crate::__private::diesel::expression::AsExpression,
-                $crate::__private::diesel::deserialize::FromSqlRow,
             )]
-            #[diesel(sql_type = $crate::__private::diesel::pg::sql_types::Uuid)]
             $vis struct $name($crate::__private::uuid::Uuid);
 
             impl $name {
@@ -112,6 +109,143 @@ macro_rules! typed_uuid {
                         .map_err(Into::into)
                 }
             }
+
+            // These are manually implemented because the derive macro uses `diesel` instead of the
+            // private path.
+            impl<
+                '__expr,
+            > $crate::__private::diesel::expression::AsExpression<$crate::__private::diesel::pg::sql_types::Uuid>
+            for &'__expr $name {
+                type Expression = $crate::__private::diesel::internal::derives::as_expression::Bound<
+                    $crate::__private::diesel::pg::sql_types::Uuid,
+                    Self,
+                >;
+                fn as_expression(
+                    self,
+                ) -> <Self as $crate::__private::diesel::expression::AsExpression<
+                    $crate::__private::diesel::pg::sql_types::Uuid,
+                >>::Expression {
+                    $crate::__private::diesel::internal::derives::as_expression::Bound::new(self)
+                }
+            }
+            impl<
+                '__expr,
+            > $crate::__private::diesel::expression::AsExpression<
+                $crate::__private::diesel::sql_types::Nullable<$crate::__private::diesel::pg::sql_types::Uuid>,
+            > for &'__expr $name {
+                type Expression = $crate::__private::diesel::internal::derives::as_expression::Bound<
+                    $crate::__private::diesel::sql_types::Nullable<
+                        $crate::__private::diesel::pg::sql_types::Uuid,
+                    >,
+                    Self,
+                >;
+                fn as_expression(
+                    self,
+                ) -> <Self as $crate::__private::diesel::expression::AsExpression<
+                    $crate::__private::diesel::sql_types::Nullable<
+                        $crate::__private::diesel::pg::sql_types::Uuid,
+                    >,
+                >>::Expression {
+                    $crate::__private::diesel::internal::derives::as_expression::Bound::new(self)
+                }
+            }
+            impl<
+                '__expr,
+                '__expr2,
+            > $crate::__private::diesel::expression::AsExpression<$crate::__private::diesel::pg::sql_types::Uuid>
+            for &'__expr2 &'__expr $name {
+                type Expression = $crate::__private::diesel::internal::derives::as_expression::Bound<
+                    $crate::__private::diesel::pg::sql_types::Uuid,
+                    Self,
+                >;
+                fn as_expression(
+                    self,
+                ) -> <Self as $crate::__private::diesel::expression::AsExpression<
+                    $crate::__private::diesel::pg::sql_types::Uuid,
+                >>::Expression {
+                    $crate::__private::diesel::internal::derives::as_expression::Bound::new(self)
+                }
+            }
+            impl<
+                '__expr,
+                '__expr2,
+            > $crate::__private::diesel::expression::AsExpression<
+                $crate::__private::diesel::sql_types::Nullable<$crate::__private::diesel::pg::sql_types::Uuid>,
+            > for &'__expr2 &'__expr $name {
+                type Expression = $crate::__private::diesel::internal::derives::as_expression::Bound<
+                    $crate::__private::diesel::sql_types::Nullable<
+                        $crate::__private::diesel::pg::sql_types::Uuid,
+                    >,
+                    Self,
+                >;
+                fn as_expression(
+                    self,
+                ) -> <Self as $crate::__private::diesel::expression::AsExpression<
+                    $crate::__private::diesel::sql_types::Nullable<
+                        $crate::__private::diesel::pg::sql_types::Uuid,
+                    >,
+                >>::Expression {
+                    $crate::__private::diesel::internal::derives::as_expression::Bound::new(self)
+                }
+            }
+            impl<
+                __DB,
+            > $crate::__private::diesel::serialize::ToSql<
+                $crate::__private::diesel::sql_types::Nullable<$crate::__private::diesel::pg::sql_types::Uuid>,
+                __DB,
+            > for $name
+            where
+                __DB: $crate::__private::diesel::backend::Backend,
+                Self: $crate::__private::diesel::serialize::ToSql<
+                    $crate::__private::diesel::pg::sql_types::Uuid,
+                    __DB,
+                >,
+            {
+                fn to_sql<'__b>(
+                    &'__b self,
+                    out: &mut $crate::__private::diesel::serialize::Output<'__b, '_, __DB>,
+                ) -> $crate::__private::diesel::serialize::Result {
+                    $crate::__private::diesel::serialize::ToSql::<
+                        $crate::__private::diesel::pg::sql_types::Uuid,
+                        __DB,
+                    >::to_sql(self, out)
+                }
+            }
+            impl $crate::__private::diesel::expression::AsExpression<
+                $crate::__private::diesel::pg::sql_types::Uuid,
+            > for $name {
+                type Expression = $crate::__private::diesel::internal::derives::as_expression::Bound<
+                    $crate::__private::diesel::pg::sql_types::Uuid,
+                    Self,
+                >;
+                fn as_expression(
+                    self,
+                ) -> <Self as $crate::__private::diesel::expression::AsExpression<
+                    $crate::__private::diesel::pg::sql_types::Uuid,
+                >>::Expression {
+                    $crate::__private::diesel::internal::derives::as_expression::Bound::new(self)
+                }
+            }
+            impl $crate::__private::diesel::expression::AsExpression<
+                $crate::__private::diesel::sql_types::Nullable<$crate::__private::diesel::pg::sql_types::Uuid>,
+            > for $name {
+                type Expression = $crate::__private::diesel::internal::derives::as_expression::Bound<
+                    $crate::__private::diesel::sql_types::Nullable<
+                        $crate::__private::diesel::pg::sql_types::Uuid,
+                    >,
+                    Self,
+                >;
+                fn as_expression(
+                    self,
+                ) -> <Self as $crate::__private::diesel::expression::AsExpression<
+                    $crate::__private::diesel::sql_types::Nullable<
+                        $crate::__private::diesel::pg::sql_types::Uuid,
+                    >,
+                >>::Expression {
+                    $crate::__private::diesel::internal::derives::as_expression::Bound::new(self)
+                }
+            }
+
 
             impl $crate::__private::std::cmp::PartialEq<$crate::__private::uuid::Uuid> for $name {
                 fn eq(&self, other: &$crate::__private::uuid::Uuid) -> bool {

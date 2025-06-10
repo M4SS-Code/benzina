@@ -73,83 +73,83 @@ macro_rules! typed_uuid {
         $(
             $(#[$attr])*
             #[derive(
-                ::std::fmt::Debug,
-                ::std::clone::Clone,
-                ::std::marker::Copy,
-                ::std::cmp::PartialEq,
-                ::std::cmp::Eq,
-                ::std::cmp::PartialOrd,
-                ::std::cmp::Ord,
-                ::std::hash::Hash,
-                ::diesel::expression::AsExpression,
-                ::diesel::deserialize::FromSqlRow,
+                $crate::__private::std::fmt::Debug,
+                $crate::__private::std::clone::Clone,
+                $crate::__private::std::marker::Copy,
+                $crate::__private::std::cmp::PartialEq,
+                $crate::__private::std::cmp::Eq,
+                $crate::__private::std::cmp::PartialOrd,
+                $crate::__private::std::cmp::Ord,
+                $crate::__private::std::hash::Hash,
+                $crate::__private::diesel::expression::AsExpression,
+                $crate::__private::diesel::deserialize::FromSqlRow,
             )]
-            #[diesel(sql_type = ::diesel::pg::sql_types::Uuid)]
-            $vis struct $name(::uuid::Uuid);
+            #[diesel(sql_type = $crate::__private::diesel::pg::sql_types::Uuid)]
+            $vis struct $name($crate::__private::uuid::Uuid);
 
             impl $name {
                 /// Gets the actual [`Uuid`].
                 ///
-                /// [`Uuid`]: ::uuid::Uuid
+                /// [`Uuid`]: $crate::__private::uuid::Uuid
                 #[must_use]
-                pub fn get(&self) -> ::uuid::Uuid {
+                pub fn get(&self) -> $crate::__private::uuid::Uuid {
                     self.0
                 }
             }
 
-            impl ::diesel::deserialize::FromSql<::diesel::pg::sql_types::Uuid, ::diesel::pg::Pg> for $name {
-                fn from_sql(value: ::diesel::pg::PgValue<'_>) -> ::diesel::deserialize::Result<Self> {
-                    uuid::Uuid::from_slice(value.as_bytes())
+            impl $crate::__private::diesel::deserialize::FromSql<$crate::__private::diesel::pg::sql_types::Uuid, $crate::__private::diesel::pg::Pg> for $name {
+                fn from_sql(value: $crate::__private::diesel::pg::PgValue<'_>) -> $crate::__private::diesel::deserialize::Result<Self> {
+                    $crate::__private::uuid::Uuid::from_slice(value.as_bytes())
                         .map(Self)
                         .map_err(Into::into)
                 }
             }
 
-            impl ::diesel::serialize::ToSql<::diesel::pg::sql_types::Uuid, ::diesel::pg::Pg> for $name {
-                fn to_sql<'b>(&'b self, out: &mut ::diesel::serialize::Output<'b, '_, ::diesel::pg::Pg>) -> ::diesel::serialize::Result {
-                    ::std::io::Write::write_all(out, self.0.as_bytes())
-                        .map(|_| ::diesel::serialize::IsNull::No)
+            impl $crate::__private::diesel::serialize::ToSql<$crate::__private::diesel::pg::sql_types::Uuid, $crate::__private::diesel::pg::Pg> for $name {
+                fn to_sql<'b>(&'b self, out: &mut $crate::__private::diesel::serialize::Output<'b, '_, $crate::__private::diesel::pg::Pg>) -> $crate::__private::diesel::serialize::Result {
+                    $crate::__private::std::io::Write::write_all(out, self.0.as_bytes())
+                        .map(|_| $crate::__private::diesel::serialize::IsNull::No)
                         .map_err(Into::into)
                 }
             }
 
-            impl ::std::cmp::PartialEq<::uuid::Uuid> for $name {
-                fn eq(&self, other: &::uuid::Uuid) -> bool {
+            impl $crate::__private::std::cmp::PartialEq<$crate::__private::uuid::Uuid> for $name {
+                fn eq(&self, other: &$crate::__private::uuid::Uuid) -> bool {
                     self.0 == *other
                 }
             }
 
-            impl ::std::cmp::PartialEq<$name> for ::uuid::Uuid {
+            impl $crate::__private::std::cmp::PartialEq<$name> for $crate::__private::uuid::Uuid {
                 fn eq(&self, other: &$name) -> bool {
                     *self == other.0
                 }
             }
 
-            impl ::std::cmp::PartialEq<::uuid::NonNilUuid> for $name {
-                fn eq(&self, other: &::uuid::NonNilUuid) -> bool {
+            impl $crate::__private::std::cmp::PartialEq<$crate::__private::uuid::NonNilUuid> for $name {
+                fn eq(&self, other: &$crate::__private::uuid::NonNilUuid) -> bool {
                     self.0 == *other
                 }
             }
 
-            impl ::std::cmp::PartialEq<$name> for ::uuid::NonNilUuid {
+            impl $crate::__private::std::cmp::PartialEq<$name> for $crate::__private::uuid::NonNilUuid {
                 fn eq(&self, other: &$name) -> bool {
                     *self == other.0
                 }
             }
 
-            impl ::std::convert::AsRef<[u8]> for $name {
+            impl $crate::__private::std::convert::AsRef<[u8]> for $name {
                 fn as_ref(&self) -> &[u8] {
-                    ::std::convert::AsRef::as_ref(&self.0)
+                    $crate::__private::std::convert::AsRef::as_ref(&self.0)
                 }
             }
 
-            impl ::std::convert::AsRef<::uuid::Uuid> for $name {
-                fn as_ref(&self) -> &::uuid::Uuid {
+            impl $crate::__private::std::convert::AsRef<$crate::__private::uuid::Uuid> for $name {
+                fn as_ref(&self) -> &$crate::__private::uuid::Uuid {
                     &self.0
                 }
             }
 
-            impl ::std::convert::From<$name> for ::uuid::Uuid {
+            impl $crate::__private::std::convert::From<$name> for $crate::__private::uuid::Uuid {
                 fn from(value: $name) -> Self {
                     value.0
                 }
@@ -157,29 +157,29 @@ macro_rules! typed_uuid {
 
             $crate::__typed_uuid__forward_from!(
                 $name:
-                ::uuid::fmt::Braced,
-                ::uuid::fmt::Hyphenated,
-                ::uuid::fmt::Simple,
-                ::uuid::fmt::Urn,
-                ::std::string::String,
-                ::std::vec::Vec<u8>,
+                $crate::__private::uuid::fmt::Braced,
+                $crate::__private::uuid::fmt::Hyphenated,
+                $crate::__private::uuid::fmt::Simple,
+                $crate::__private::uuid::fmt::Urn,
+                $crate::__private::std::string::String,
+                $crate::__private::std::vec::Vec<u8>,
             );
 
-            impl ::std::fmt::Display for $name {
-                fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-                    ::std::fmt::Display::fmt(&self.0, f)
+            impl $crate::__private::std::fmt::Display for $name {
+                fn fmt(&self, f: &mut $crate::__private::std::fmt::Formatter<'_>) -> $crate::__private::std::fmt::Result {
+                    $crate::__private::std::fmt::Display::fmt(&self.0, f)
                 }
             }
 
-            impl ::std::fmt::LowerHex for $name {
-                fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-                    ::std::fmt::LowerHex::fmt(&self.0, f)
+            impl $crate::__private::std::fmt::LowerHex for $name {
+                fn fmt(&self, f: &mut $crate::__private::std::fmt::Formatter<'_>) -> $crate::__private::std::fmt::Result {
+                    $crate::__private::std::fmt::LowerHex::fmt(&self.0, f)
                 }
             }
 
-            impl ::std::fmt::UpperHex for $name {
-                fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-                    ::std::fmt::UpperHex::fmt(&self.0, f)
+            impl $crate::__private::std::fmt::UpperHex for $name {
+                fn fmt(&self, f: &mut $crate::__private::std::fmt::Formatter<'_>) -> $crate::__private::std::fmt::Result {
+                    $crate::__private::std::fmt::UpperHex::fmt(&self.0, f)
                 }
             }
 
@@ -193,7 +193,7 @@ macro_rules! typed_uuid {
 macro_rules! __typed_uuid__forward_from {
     ($name:ident: $($ty:path),+ $(,)?) => {
         $(
-            impl ::std::convert::From<$name> for $ty {
+            impl $crate::__private::std::convert::From<$name> for $ty {
                 fn from(value: $name) -> Self {
                     Self::from(value.0)
                 }
@@ -207,12 +207,15 @@ macro_rules! __typed_uuid__forward_from {
 #[cfg(feature = "serde")]
 macro_rules! __typed_uuid__impl_serde {
     ($name:ident) => {
-        impl ::serde::Serialize for $name {
-            fn serialize<S>(&self, serializer: S) -> ::std::result::Result<S::Ok, S::Error>
+        impl $crate::__private::serde::Serialize for $name {
+            fn serialize<S>(
+                &self,
+                serializer: S,
+            ) -> $crate::__private::std::result::Result<S::Ok, S::Error>
             where
-                S: ::serde::Serializer,
+                S: $crate::__private::serde::Serializer,
             {
-                ::serde::Serialize::serialize(&self.0, serializer)
+                $crate::__private::serde::Serialize::serialize(&self.0, serializer)
             }
         }
     };

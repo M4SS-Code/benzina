@@ -10,7 +10,14 @@ repository.workspace = true
 rust-version.workspace = true
 
 [package.metadata.docs.rs]
-features = ["postgres", "mysql", "serde", "typed-uuid", "example-generated"]
+features = [
+    "postgres",
+    "mysql",
+    "serde",
+    "typed-uuid",
+    "example-generated",
+    "dangerous-construction",
+]
 rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
@@ -21,7 +28,8 @@ benzina-derive = { path = "../benzina-derive", version = "=0.3.3", optional = tr
 uuid = { version = ">=0.7.0, <2.0.0", default-features = false, optional = true }
 
 [dev-dependencies]
-serde_test =  "1"
+serde_test = "1"
+uuid = { version = ">=0.7.0, <2.0.0", default-features = false, features = ["v4"] }
 
 [features]
 default = ["derive"]
@@ -35,6 +43,7 @@ serde = ["dep:serde", "uuid?/serde"]
 utoipa = ["dep:utoipa"]
 
 example-generated = ["typed-uuid"]
+dangerous-construction = ["typed-uuid"]
 
 [lints]
 workspace = true

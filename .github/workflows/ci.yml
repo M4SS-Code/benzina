@@ -39,6 +39,21 @@ jobs:
       - name: Run clippy
         run: cargo clippy --all-features -- -D warnings
 
+  cargo-hack:
+    name: cargo-hack / 1.87.0
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@1.87.0
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-hack@0.6.36
+
+      - name: Run cargo-hack
+        run: cargo hack check --feature-powerset --no-dev-deps
+
   test:
     name: test / ${{ matrix.name }}
     runs-on: ubuntu-latest

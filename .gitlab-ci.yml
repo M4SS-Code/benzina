@@ -26,6 +26,14 @@ rust:clippy:
   script:
     - cargo clippy --all-features -- -D warnings
 
+rust:hack:
+  stage: test
+  image: rust:1.87-alpine3.22
+  before_script:
+    - apk add musl-dev cargo-hack
+  script:
+    - cargo hack check --feature-powerset --no-dev-deps
+
 rust:test:
   stage: test
   image: rust:1.87-alpine3.22

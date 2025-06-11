@@ -221,10 +221,28 @@ macro_rules! impl_numbers {
     }
 }
 
+macro_rules! from_numbers {
+    ($($from:ident => $to:ident),*) => {
+        $(
+            impl From<$from> for $to {
+                fn from(value: $from) -> Self {
+                    Self(value.get().into())
+                }
+            }
+        )*
+    }
+}
+
 impl_numbers! {
     U15 => u16, i16, SmallInt,
     U31 => u32, i32, Integer,
     U63 => u64, i64, BigInt
+}
+
+from_numbers! {
+    U15 => U31,
+    U15 => U63,
+    U31 => U63
 }
 
 #[cfg(test)]

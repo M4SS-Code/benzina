@@ -91,18 +91,14 @@ macro_rules! typed_uuid {
             $vis struct $name($crate::__private::uuid::Uuid);
 
             impl $name {
-                /// Creates a new typed [`Uuid`] which does not come from the database.
-                ///
-                /// [`Uuid`]: $crate::__private::uuid::Uuid
+                /// Creates a new typed `Uuid` which does not come from the database.
                 #[must_use]
                 #[cfg(feature = "dangerous-construction")]
                 pub fn dangerous_new(inner: $crate::__private::uuid::Uuid) -> Self {
                     Self(inner)
                 }
 
-                /// Gets the actual [`Uuid`].
-                ///
-                /// [`Uuid`]: $crate::__private::uuid::Uuid
+                /// Gets the actual `Uuid`.
                 #[must_use]
                 pub fn get(&self) -> $crate::__private::uuid::Uuid {
                     self.0

@@ -91,12 +91,7 @@ macro_rules! typed_uuid {
             $vis struct $name($crate::__private::uuid::Uuid);
 
             impl $name {
-                /// Creates a new typed `Uuid` which does not come from the database.
-                #[must_use]
-                #[cfg(feature = "dangerous-construction")]
-                pub fn dangerous_new(inner: $crate::__private::uuid::Uuid) -> Self {
-                    Self(inner)
-                }
+                $crate::__typed_uuid__impl_dangerous_construction!();
 
                 /// Gets the actual `Uuid`.
                 #[must_use]
@@ -345,6 +340,26 @@ macro_rules! __typed_uuid__forward_from {
             }
         )+
     };
+}
+
+#[macro_export]
+#[doc(hidden)]
+#[cfg(feature = "dangerous-construction")]
+macro_rules! __typed_uuid__impl_dangerous_construction {
+    () => {
+        /// Creates a new typed `Uuid` which does not come from the database.
+        #[must_use]
+        pub fn dangerous_new(inner: $crate::__private::uuid::Uuid) -> Self {
+            Self(inner)
+        }
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+#[cfg(not(feature = "dangerous-construction"))]
+macro_rules! __typed_uuid__impl_dangerous_construction {
+    () => {};
 }
 
 #[macro_export]

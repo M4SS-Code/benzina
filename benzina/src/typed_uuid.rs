@@ -4,7 +4,7 @@
 /// generates code which implements many useful traits, including the ones needed to work with
 /// [`diesel`].
 ///
-/// The generated structs do not expose any method or trait to create an arbitrary instance, in
+/// The generated structs do not expose any method or trait to create an arbitrary instance[^See note], in
 /// order to provide the guarantee that the `UUID` is valid. However, it is possible to choose to
 /// add traits and methods to customize the behavior.
 ///
@@ -48,7 +48,7 @@
 /// }
 /// ```
 ///
-/// Keep in mind that there is no way to construct an instance unless the instantiation is done
+/// Keep in mind that there is no way[^See note] to construct an instance unless the instantiation is done
 /// inside the module containing the new type or a submodule of it:
 ///
 /// ```compile_fail,E0603
@@ -62,6 +62,12 @@
 /// let foo = inner::Foo(Uuid::default());
 /// //               ^^^ private tuple struct constructor
 /// ```
+///
+/// [^See note]: There is no way in normal usage to construct an instance. The exception is with the
+/// `dangerous_new` method, which is gated behind the `dangerous-construction` feature and intended
+/// for special cases (including testing). If the `dangerous-construction` feature is enabled, it is
+/// recommended to use [`clippy::disallowed_methods`](https://rust-lang.github.io/rust-clippy/stable/index.html#disallowed_methods) to prevent the usage of `dangerous_new` outside
+/// of the desired situations.
 #[macro_export]
 macro_rules! typed_uuid {
     (

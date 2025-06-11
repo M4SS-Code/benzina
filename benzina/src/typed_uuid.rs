@@ -252,6 +252,17 @@ macro_rules! typed_uuid {
                 }
             }
 
+            impl<__DB, __ST> $crate::__private::diesel::deserialize::Queryable<__ST, __DB> for $name
+            where
+                __DB: $crate::__private::diesel::backend::Backend,
+                __ST: $crate::__private::diesel::sql_types::SingleValue,
+                Self: $crate::__private::diesel::deserialize::FromSql<__ST, __DB>,
+            {
+                type Row = Self;
+                fn build(row: Self) -> $crate::__private::diesel::deserialize::Result<Self> {
+                    Ok(row)
+                }
+            }
 
             impl $crate::__private::std::cmp::PartialEq<$crate::__private::uuid::Uuid> for $name {
                 fn eq(&self, other: &$crate::__private::uuid::Uuid) -> bool {

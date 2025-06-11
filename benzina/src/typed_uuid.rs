@@ -370,3 +370,16 @@ macro_rules! __typed_uuid__impl_serde {
 macro_rules! __typed_uuid__impl_serde {
     ($name:ident) => {};
 }
+
+#[cfg(test)]
+mod test {
+    use uuid::Uuid;
+
+    #[test]
+    fn creates_new_typed_uuid() {
+        crate::typed_uuid!(pub FooId);
+        let inner = Uuid::new_v4();
+        let new = FooId::dangerous_new(inner);
+        assert_eq!(new.get(), inner);
+    }
+}

@@ -300,6 +300,12 @@ macro_rules! typed_uuid {
                 }
             }
 
+            impl $crate::__private::std::borrow::Borrow<$crate::__private::uuid::Uuid> for $name {
+                fn borrow(&self) -> &$crate::__private::uuid::Uuid {
+                    &self.0
+                }
+            }
+
             impl $crate::__private::std::convert::From<$name> for $crate::__private::uuid::Uuid {
                 fn from(value: $name) -> Self {
                     value.0

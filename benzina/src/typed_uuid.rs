@@ -430,4 +430,16 @@ mod test {
         let new = FooId::dangerous_new(inner);
         assert_eq!(new.get(), inner);
     }
+
+    #[test]
+    fn partial_ord() {
+        crate::typed_uuid!(Foo);
+        let one = Uuid::from_u128(1);
+        let two = Uuid::from_u128(2);
+
+        assert!(Foo::dangerous_new(one) < two);
+        assert!(one < Foo::dangerous_new(two));
+        assert!(Foo::dangerous_new(one) <= one);
+        assert!(one <= Foo::dangerous_new(one));
+    }
 }

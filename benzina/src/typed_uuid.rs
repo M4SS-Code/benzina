@@ -95,6 +95,7 @@ macro_rules! typed_uuid {
 
                 /// Gets the actual `Uuid`.
                 #[must_use]
+                #[allow(unused)]
                 $vis fn get(&self) -> $crate::__private::uuid::Uuid {
                     self.0
                 }
@@ -366,6 +367,7 @@ macro_rules! __typed_uuid__impl_dangerous_construction {
     ($vis:vis) => {
         /// Creates a new typed `Uuid` which does not come from the database.
         #[must_use]
+        #[allow(unused)]
         $vis fn dangerous_new(inner: $crate::__private::uuid::Uuid) -> Self {
             Self(inner)
         }

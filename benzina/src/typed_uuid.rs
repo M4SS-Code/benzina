@@ -289,6 +289,18 @@ macro_rules! typed_uuid {
                 }
             }
 
+            impl $crate::__private::std::cmp::PartialOrd<$crate::__private::uuid::Uuid> for $name {
+                fn partial_cmp(&self, other: &$crate::__private::uuid::Uuid) -> $crate::__private::std::option::Option<$crate::__private::std::cmp::Ordering> {
+                    $crate::__private::std::cmp::PartialOrd::partial_cmp(&self.0, other)
+                }
+            }
+
+            impl $crate::__private::std::cmp::PartialOrd<$name> for $crate::__private::uuid::Uuid {
+                fn partial_cmp(&self, other: &$name) -> $crate::__private::std::option::Option<$crate::__private::std::cmp::Ordering> {
+                    $crate::__private::std::cmp::PartialOrd::partial_cmp(self, &other.0)
+                }
+            }
+
             impl $crate::__private::std::convert::AsRef<[u8]> for $name {
                 fn as_ref(&self) -> &[u8] {
                     $crate::__private::std::convert::AsRef::as_ref(&self.0)

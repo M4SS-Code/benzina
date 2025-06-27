@@ -176,6 +176,12 @@ macro_rules! impl_numbers {
                 }
             }
 
+            impl Default for $type {
+                fn default() -> Self {
+                    const { Self::new(0).unwrap() }
+                }
+            }
+
             impl From<$type> for $inner {
                 fn from(value: $type) -> Self {
                     value.get()

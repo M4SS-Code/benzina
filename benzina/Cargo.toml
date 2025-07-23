@@ -34,9 +34,9 @@ uuid = { version = ">=0.7.0, <2.0.0", default-features = false, features = ["v4"
 
 [features]
 default = ["derive"]
-derive = ["dep:benzina-derive", "dep:indexmap"]
+derive = ["dep:benzina-derive", "dep:diesel", "dep:indexmap"]
 
-postgres = ["benzina-derive?/postgres", "diesel", "diesel/postgres_backend"]
+postgres = ["benzina-derive?/postgres", "dep:diesel", "diesel/postgres_backend"]
 typed-uuid = ["postgres", "diesel/uuid", "dep:uuid"]
 mysql = ["benzina-derive?/mysql"]
 

@@ -224,7 +224,7 @@ impl Transformation {
             })
             .collect::<TokenStream>();
         quote! {
-            ::benzina::__private::std::iter::Iterator::collect::<Vec<_>>(
+            ::benzina::__private::std::iter::Iterator::collect::<::benzina::__private::std::vec::Vec<_>>(
                 ::benzina::__private::std::iter::Iterator::map(
                     ::benzina::__private::indexmap::IndexMap::into_values(#root),
                     |item| #output_type {
@@ -337,7 +337,7 @@ impl NoTransformation {
             }
             Quantity::AtLeastZero | Quantity::AtLeastOne => {
                 quote! {
-                    ::benzina::__private::std::iter::Iterator::collect::<Vec<_>>(
+                    ::benzina::__private::std::iter::Iterator::collect::<::benzina::__private::std::vec::Vec<_>>(
                         ::benzina::__private::indexmap::IndexMap::into_values(#root)
                     )
                 }

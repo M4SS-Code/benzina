@@ -76,6 +76,7 @@ pub fn benzina_enum_derive(input: proc_macro::TokenStream) -> proc_macro::TokenS
 #[proc_macro]
 pub fn join(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as Join);
+    println!("{input:#?}");
 
     input.into_token_stream().into()
 }

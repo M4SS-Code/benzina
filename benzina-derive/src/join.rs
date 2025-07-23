@@ -8,22 +8,26 @@ use syn::{
     punctuated::Punctuated,
 };
 
+#[derive(Debug)]
 pub(crate) struct Join {
     input: Ident,
     transformation: Transformation,
 }
 
+#[derive(Debug)]
 enum NestedOrNot {
     Nested(Punctuated<Transformation, Token![,]>),
     Not(NoTransformation),
 }
 
+#[derive(Debug)]
 struct Transformation {
     quantity: Quantity,
     output_type: Ident,
     entries: Punctuated<(Ident, NestedOrNot), Token![,]>,
 }
 
+#[derive(Debug)]
 struct NoTransformation {
     quantity: Quantity,
     tuple_index: usize,
@@ -90,13 +94,10 @@ impl ToTokens for Join {
 impl NestedOrNot {
     fn generate_hashmap_values(&self) -> TokenStream {
         match self {
-            Self::Nested(nested) => {
-                let values = nested
-                    .iter()
-                    .flat_map(|item| item.generate_hashmap_values())
-                    .collect::<TokenStream>();
-                quote! { HashMap::<_, (#values)> }
-            }
+            Self::Nested(nested) => nested
+                .iter()
+                .flat_map(|item| item.generate_hashmap_values())
+                .collect::<TokenStream>(),
             Self::Not(not) => not.generate_hashmap_values(),
         }
     }
@@ -139,10 +140,14 @@ impl Parse for NestedOrNot {
 
 impl Transformation {
     fn generate_hashmap_values(&self) -> TokenStream {
+        println!("generate_hashmap_values {}", self.entries.len());
         let values = self
             .entries
             .iter()
-            .flat_map(|(_key, value)| value.generate_hashmap_values())
+            .flat_map(|(key, value)| {
+                println!("generating {key}");
+                value.generate_hashmap_values()
+            })
             .collect::<TokenStream>();
         quote! { HashMap::<_, (#values)> }
     }
@@ -230,7 +235,20 @@ impl Parse for Transformation {
 
 impl NoTransformation {
     fn generate_hashmap_values(&self) -> TokenStream {
-        quote! { _, }
+        match self.quantity {
+            Quantity::MaybeOne => quote! {
+                Option<_>,
+            },
+            Quantity::One => quote! {
+                _,
+            },
+            Quantity::AtLeastZero => quote! {
+                HashMap::<_, _>,
+            },
+            Quantity::AtLeastOne => quote! {
+                HashMap::<_, _>,
+            },
+        }
     }
 
     fn row_handlers(&self, root_index: usize) -> TokenStream {

@@ -43,7 +43,10 @@ impl Join {
     }
 
     fn generate_root_filler(&self) -> TokenStream {
-        let input = &self.input;
+        let Self {
+            input,
+            transformation: _,
+        } = self;
         let row_handlers = self.transformation.row_handlers(None);
         quote! {
             for row in #input {
@@ -77,15 +80,11 @@ impl ToTokens for Join {
         let hashmap = self.generate_hashmap();
         let root_filler = self.generate_root_filler();
         let root_converter = self.generate_root_converter();
-        let output = quote! {
-            let mut root = #hashmap::new();
-            #root_filler
-            #root_converter
-        };
-
         tokens.extend(quote! {
             {
-                #output
+                let mut root = #hashmap::new();
+                #root_filler
+                #root_converter
             }
         });
     }
@@ -124,9 +123,7 @@ impl NestedOrNot {
 
     fn or_insert(&self, tuple_index_overwrites: &BTreeMap<usize, TokenStream>) -> TokenStream {
         match self {
-            Self::Nested(_nested) => {
-                quote! { ::benzina::__private::indexmap::IndexMap::<_, _>::new(), }
-            }
+            Self::Nested(_nested) => NewIndexMap.into_token_stream(),
             Self::Not(not) => not.or_insert(tuple_index_overwrites),
         }
     }
@@ -135,6 +132,7 @@ impl NestedOrNot {
 impl Parse for NestedOrNot {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         if let Ok(not) = input.fork().parse() {
+            // FIXME: can we advance the above `fork`?
             let _ = input.parse::<NoTransformation>()?;
             Ok(Self::Not(not))
         } else {
@@ -175,7 +173,7 @@ impl Transformation {
         let wrapper = if matches!(self.quantity, Quantity::AtLeastZero) {
             let name = Ident::new(&format!("unwrapped{}", one.tuple_index), Span::call_site());
             tuple_index_overwrites.insert(one.tuple_index, quote! { #name });
-            quote! { if let Some(#name) = row.#one_tuple_index }
+            quote! { if let ::benzina::__private::std::option::Option::Some(#name) = row.#one_tuple_index }
         } else {
             quote! {}
         };
@@ -193,9 +191,13 @@ impl Transformation {
         } else {
             quote! { row.#one_tuple_index }
         };
+        let id = Identifiable { table: one_name };
         quote! {
             #wrapper {
-                let mut root = #root_index.entry(::benzina::__private::identifiable_id(&#one_name).clone()).or_insert((#or_insert));
+                let mut root = ::benzina::__private::indexmap::map::Entry::or_insert(
+                    ::benzina::__private::indexmap::IndexMap::entry(&mut #root_index, #id),
+                    (#or_insert)
+                );
                 #entries_mapper
             }
         }
@@ -221,9 +223,16 @@ impl Transformation {
                 }
             })
             .collect::<TokenStream>();
-        quote! { #root.into_values().map(|item| #output_type {
-            #entries
-        }).collect::<Vec<_>>() }
+        quote! {
+            ::benzina::__private::std::iter::Iterator::collect::<Vec<_>>(
+                ::benzina::__private::std::iter::Iterator::map(
+                    ::benzina::__private::indexmap::IndexMap::into_values(#root),
+                    |item| #output_type {
+                        #entries
+                    }
+                )
+            )
+        }
     }
 
     fn or_insert(&self, tuple_index_overwrites: &BTreeMap<usize, TokenStream>) -> TokenStream {
@@ -277,29 +286,47 @@ impl NoTransformation {
 
     fn row_handlers(&self, root_index: usize) -> TokenStream {
         let tuple_index = Index::from(self.tuple_index);
+        let row = quote! { row.#tuple_index };
+
         let root_index = Index::from(root_index);
         match self.quantity {
             Quantity::MaybeOne => quote! {
                 {
-                    if let Some(item) = row.#tuple_index {
-                        root.#root_index = Some(item);
+                    if let ::benzina::__private::std::option::Option::Some(item) = #row {
+                        root.#root_index = ::benzina::__private::std::option::Option::Some(item);
                     }
                 }
             },
             Quantity::One => quote! {},
-            Quantity::AtLeastZero => quote! {
-                {
-                    if let Some(item) = row.#tuple_index {
-                        root.#root_index.entry(::benzina::__private::identifiable_id(&item).clone()).or_insert(item);
+            Quantity::AtLeastZero => {
+                let id = Identifiable {
+                    table: quote! { item },
+                };
+                quote! {
+                    {
+                        if let ::benzina::__private::std::option::Option::Some(item) = #row {
+                            ::benzina::__private::indexmap::map::Entry::or_insert(
+                                ::benzina::__private::indexmap::IndexMap::entry(&mut root.#root_index, #id),
+                                item
+                            );
+                        }
                     }
                 }
-            },
-            Quantity::AtLeastOne => quote! {
-                {
-                    let item = row.#tuple_index;
-                    root.#root_index.entry(::benzina::__private::identifiable_id(&item).clone()).or_insert(item);
+            }
+            Quantity::AtLeastOne => {
+                let id = Identifiable {
+                    table: quote! { item },
+                };
+                quote! {
+                    {
+                        let item = #row;
+                        ::benzina::__private::indexmap::map::Entry::or_insert(
+                            ::benzina::__private::indexmap::IndexMap(&mut root.#root_index, #id),
+                            item
+                        );
+                    }
                 }
-            },
+            }
         }
     }
 
@@ -309,14 +336,18 @@ impl NoTransformation {
                 quote! { #root }
             }
             Quantity::AtLeastZero | Quantity::AtLeastOne => {
-                quote! { #root.into_values().collect::<Vec<_>>() }
+                quote! {
+                    ::benzina::__private::std::iter::Iterator::collect::<Vec<_>>(
+                        ::benzina::__private::indexmap::IndexMap::into_values(#root)
+                    )
+                }
             }
         }
     }
 
     fn or_insert(&self, tuple_index_overwrites: &BTreeMap<usize, TokenStream>) -> TokenStream {
         match self.quantity {
-            Quantity::MaybeOne => quote! { None, },
+            Quantity::MaybeOne => quote! { ::benzina::__private::std::option::Option::None, },
             Quantity::One => {
                 if let Some(overwrite) = tuple_index_overwrites.get(&self.tuple_index) {
                     quote! { #overwrite, }
@@ -325,9 +356,7 @@ impl NoTransformation {
                     quote! { row.#tuple_index, }
                 }
             }
-            Quantity::AtLeastZero | Quantity::AtLeastOne => {
-                quote! { ::benzina::__private::indexmap::IndexMap::<_, _>::new(), }
-            }
+            Quantity::AtLeastZero | Quantity::AtLeastOne => NewIndexMap.into_token_stream(),
         }
     }
 }
@@ -360,5 +389,30 @@ impl Parse for Quantity {
                 ),
             )),
         }
+    }
+}
+
+struct NewIndexMap;
+
+impl ToTokens for NewIndexMap {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend(quote! {
+            ::benzina::__private::indexmap::IndexMap::<_, _>::new()
+        });
+    }
+}
+
+struct Identifiable<T> {
+    table: T,
+}
+
+impl<T: ToTokens> ToTokens for Identifiable<T> {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let Self { table } = self;
+        tokens.extend(quote! {
+            ::benzina::__private::std::clone::Clone::clone(
+                <_ as ::benzina::__private::diesel::associations::Identifiable>::id(&#table)
+            )
+        });
     }
 }

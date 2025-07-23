@@ -35,72 +35,72 @@ pub(super) struct NoTransformation {
 }
 
 impl Join {
-    fn generate_hashmap(&self) -> TokenStream {
-        self.transformation.generate_hashmap_values()
+    fn map_type(&self) -> TokenStream {
+        self.transformation.map_type()
     }
 
-    fn generate_root_filler(&self) -> TokenStream {
+    fn accumulator(&self) -> TokenStream {
         let Self {
             input,
             transformation: _,
         } = self;
-        let row_handlers = self.transformation.row_handlers(None);
+        let accumulator = self.transformation.accumulator(None);
         quote! {
             for row in #input {
-                #row_handlers
+                #accumulator
             }
         }
     }
 
-    fn generate_root_converter(&self) -> TokenStream {
-        let root = quote! { root };
-        self.transformation.root_converter(&root)
+    fn presenter(&self) -> TokenStream {
+        let accumulator = quote! { accumulator };
+        self.transformation.presenter(&accumulator)
     }
 }
 
 impl ToTokens for Join {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let hashmap = self.generate_hashmap();
-        let root_filler = self.generate_root_filler();
-        let root_converter = self.generate_root_converter();
+        let map_type = self.map_type();
+        let accumulator = self.accumulator();
+        let presenter = self.presenter();
         tokens.extend(quote! {
             {
-                let mut root: #hashmap = ::benzina::__private::new_indexmap();
-                #root_filler
-                #root_converter
+                let mut accumulator: #map_type = ::benzina::__private::new_indexmap();
+                #accumulator
+                #presenter
             }
         });
     }
 }
 
 impl NestedOrNot {
-    fn generate_hashmap_values(&self) -> TokenStream {
+    fn map_type_values(&self) -> TokenStream {
         match self {
             Self::Nested(nested) => nested
                 .iter()
-                .flat_map(Transformation::generate_hashmap_values)
+                .flat_map(Transformation::map_type)
                 .collect::<TokenStream>(),
-            Self::Not(not) => not.generate_hashmap_values(),
+            Self::Not(not) => not.map_type_values(),
         }
     }
 
-    fn row_handlers(&self, root_index: usize) -> TokenStream {
+    fn accumulator(&self, accumulator_index: usize) -> TokenStream {
         match self {
             Self::Nested(nested) => nested
                 .iter()
-                .flat_map(|item| item.row_handlers(Some(root_index)))
+                .flat_map(|item| item.accumulator(Some(accumulator_index)))
                 .collect(),
-            Self::Not(not) => not.row_handlers(root_index),
+            Self::Not(not) => not.accumulator(accumulator_index),
         }
     }
 
-    fn root_converter(&self, root: &TokenStream) -> TokenStream {
+    fn presenter(&self, accumulator: &TokenStream) -> TokenStream {
         match self {
             Self::Nested(nested) => nested
                 .iter()
-                .flat_map(|item| item.root_converter(root))
+                .flat_map(|item| item.presenter(accumulator))
                 .collect::<TokenStream>(),
-            Self::Not(not) => not.root_converter(root),
+            Self::Not(not) => not.presenter(accumulator),
         }
     }
 
@@ -116,21 +116,21 @@ impl NestedOrNot {
 }
 
 impl Transformation {
-    fn generate_hashmap_values(&self) -> TokenStream {
+    fn map_type(&self) -> TokenStream {
         let values = self
             .entries
             .iter()
-            .flat_map(|(_key, value)| value.generate_hashmap_values())
+            .flat_map(|(_key, value)| value.map_type_values())
             .collect::<TokenStream>();
         quote! { ::benzina::__private::IndexMap::<_, (#values)> }
     }
 
-    fn row_handlers(&self, root_index: Option<usize>) -> TokenStream {
-        let root_index = if let Some(root_index) = root_index {
-            let root_index = Index::from(root_index);
-            quote! { root.#root_index }
+    fn accumulator(&self, accumulator_index: Option<usize>) -> TokenStream {
+        let accumulator_index = if let Some(accumulator_index) = accumulator_index {
+            let accumulator_index = Index::from(accumulator_index);
+            quote! { accumulator.#accumulator_index }
         } else {
-            quote! { root }
+            quote! { accumulator }
         };
         let one = self
             .entries
@@ -156,7 +156,7 @@ impl Transformation {
             .entries
             .iter()
             .enumerate()
-            .map(|(i, (_name, entry))| entry.row_handlers(i))
+            .map(|(i, (_name, entry))| entry.accumulator(i))
             .collect::<TokenStream>();
 
         let one_name = if let Some(overwrite) = tuple_index_overwrites.get(&one.tuple_index) {
@@ -167,8 +167,8 @@ impl Transformation {
         let id = Identifiable { table: one_name };
         quote! {
             #wrapper {
-                let mut root = ::benzina::__private::indexmap::map::Entry::or_insert(
-                    ::benzina::__private::IndexMap::entry(&mut #root_index, #id),
+                let mut accumulator = ::benzina::__private::indexmap::map::Entry::or_insert(
+                    ::benzina::__private::IndexMap::entry(&mut #accumulator_index, #id),
                     (#or_insert)
                 );
                 #entries_mapper
@@ -176,7 +176,7 @@ impl Transformation {
         }
     }
 
-    fn root_converter(&self, root: &TokenStream) -> TokenStream {
+    fn presenter(&self, accumulator: &TokenStream) -> TokenStream {
         let Self {
             quantity: _,
             output_type,
@@ -190,7 +190,7 @@ impl Transformation {
                 let item = Ident::new("item", Span::call_site());
                 let ii = Index::from(i);
                 let item = quote! { #item.#ii };
-                let entry = entry.root_converter(&item);
+                let entry = entry.presenter(&item);
                 quote! {
                     #name: #entry,
                 }
@@ -199,7 +199,7 @@ impl Transformation {
         quote! {
             ::benzina::__private::std::iter::Iterator::collect::<::benzina::__private::std::vec::Vec<_>>(
                 ::benzina::__private::std::iter::Iterator::map(
-                    ::benzina::__private::IndexMap::into_values(#root),
+                    ::benzina::__private::IndexMap::into_values(#accumulator),
                     |item| #output_type {
                         #entries
                     }
@@ -217,7 +217,7 @@ impl Transformation {
 }
 
 impl NoTransformation {
-    fn generate_hashmap_values(&self) -> TokenStream {
+    fn map_type_values(&self) -> TokenStream {
         match self.quantity {
             Quantity::MaybeOne => quote! {
                 Option<_>,
@@ -231,16 +231,16 @@ impl NoTransformation {
         }
     }
 
-    fn row_handlers(&self, root_index: usize) -> TokenStream {
+    fn accumulator(&self, accumulator_index: usize) -> TokenStream {
         let tuple_index = Index::from(self.tuple_index);
         let row = quote! { row.#tuple_index };
 
-        let root_index = Index::from(root_index);
+        let accumulator_index = Index::from(accumulator_index);
         match self.quantity {
             Quantity::MaybeOne => quote! {
                 {
                     if let ::benzina::__private::std::option::Option::Some(item) = #row {
-                        root.#root_index = ::benzina::__private::std::option::Option::Some(item);
+                        accumulator.#accumulator_index = ::benzina::__private::std::option::Option::Some(item);
                     }
                 }
             },
@@ -253,7 +253,7 @@ impl NoTransformation {
                     {
                         if let ::benzina::__private::std::option::Option::Some(item) = #row {
                             ::benzina::__private::indexmap::map::Entry::or_insert(
-                                ::benzina::__private::IndexMap::entry(&mut root.#root_index, #id),
+                                ::benzina::__private::IndexMap::entry(&mut accumulator.#accumulator_index, #id),
                                 item
                             );
                         }
@@ -268,7 +268,7 @@ impl NoTransformation {
                     {
                         let item = #row;
                         ::benzina::__private::indexmap::map::Entry::or_insert(
-                            ::benzina::__private::IndexMap(&mut root.#root_index, #id),
+                            ::benzina::__private::IndexMap(&mut accumulator.#accumulator_index, #id),
                             item
                         );
                     }
@@ -277,15 +277,15 @@ impl NoTransformation {
         }
     }
 
-    fn root_converter(&self, root: &TokenStream) -> TokenStream {
+    fn presenter(&self, accumulator: &TokenStream) -> TokenStream {
         match self.quantity {
             Quantity::MaybeOne | Quantity::One | Quantity::AssumeOne => {
-                quote! { #root }
+                quote! { #accumulator }
             }
             Quantity::AtLeastZero | Quantity::AtLeastOne => {
                 quote! {
                     ::benzina::__private::std::iter::Iterator::collect::<::benzina::__private::std::vec::Vec<_>>(
-                        ::benzina::__private::IndexMap::into_values(#root)
+                        ::benzina::__private::IndexMap::into_values(#accumulator)
                     )
                 }
             }

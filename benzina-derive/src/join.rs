@@ -124,7 +124,10 @@ impl NestedOrNot {
 
     fn or_insert(&self, tuple_index_overwrites: &BTreeMap<usize, TokenStream>) -> TokenStream {
         match self {
-            Self::Nested(_nested) => NewIndexMap.into_token_stream(),
+            Self::Nested(_nested) => {
+                let new_indexmap = NewIndexMap.into_token_stream();
+                quote! { #new_indexmap, }
+            }
             Self::Not(not) => not.or_insert(tuple_index_overwrites),
         }
     }
@@ -377,7 +380,10 @@ impl NoTransformation {
                     }
                 }
             }
-            Quantity::AtLeastZero | Quantity::AtLeastOne => NewIndexMap.into_token_stream(),
+            Quantity::AtLeastZero | Quantity::AtLeastOne => {
+                let new_indexmap = NewIndexMap.into_token_stream();
+                quote! { #new_indexmap, }
+            }
         }
     }
 }

@@ -8,26 +8,22 @@ use syn::{
     punctuated::Punctuated,
 };
 
-#[derive(Debug)]
 pub(crate) struct Join {
     input: Ident,
     transformation: Transformation,
 }
 
-#[derive(Debug)]
 enum NestedOrNot {
     Nested(Punctuated<Transformation, Token![,]>),
     Not(NoTransformation),
 }
 
-#[derive(Debug)]
 struct Transformation {
     quantity: Quantity,
     output_type: Ident,
     entries: Punctuated<(Ident, NestedOrNot), Token![,]>,
 }
 
-#[derive(Debug)]
 struct NoTransformation {
     quantity: Quantity,
     tuple_index: usize,
@@ -55,6 +51,11 @@ impl Join {
             }
         }
     }
+
+    fn generate_root_converter(&self) -> TokenStream {
+        let root = quote! { root };
+        self.transformation.root_converter(&root)
+    }
 }
 
 impl Parse for Join {
@@ -75,12 +76,11 @@ impl ToTokens for Join {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let hashmap = self.generate_hashmap();
         let root_filler = self.generate_root_filler();
+        let root_converter = self.generate_root_converter();
         let output = quote! {
             let mut root = #hashmap::new();
             #root_filler
-
-            //root.into_values().map(|element| element).collect::<Vec<_>>()
-            todo!()
+            #root_converter
         };
 
         tokens.extend(quote! {
@@ -112,6 +112,16 @@ impl NestedOrNot {
         }
     }
 
+    fn root_converter(&self, root: &TokenStream) -> TokenStream {
+        match self {
+            Self::Nested(nested) => nested
+                .iter()
+                .flat_map(|item| item.root_converter(root))
+                .collect::<TokenStream>(),
+            Self::Not(not) => not.root_converter(root),
+        }
+    }
+
     fn or_insert(&self, tuple_index_overwrites: &BTreeMap<usize, TokenStream>) -> TokenStream {
         match self {
             Self::Nested(nested) => {
@@ -140,14 +150,10 @@ impl Parse for NestedOrNot {
 
 impl Transformation {
     fn generate_hashmap_values(&self) -> TokenStream {
-        println!("generate_hashmap_values {}", self.entries.len());
         let values = self
             .entries
             .iter()
-            .flat_map(|(key, value)| {
-                println!("generating {key}");
-                value.generate_hashmap_values()
-            })
+            .flat_map(|(key, value)| value.generate_hashmap_values())
             .collect::<TokenStream>();
         quote! { HashMap::<_, (#values)> }
     }
@@ -197,6 +203,31 @@ impl Transformation {
                 #entries_mapper
             }
         }
+    }
+
+    fn root_converter(&self, root: &TokenStream) -> TokenStream {
+        let Self {
+            quantity,
+            output_type,
+            entries,
+        } = self;
+
+        let entries = entries
+            .iter()
+            .enumerate()
+            .map(|(i, (name, entry))| {
+                let item = Ident::new("item", Span::call_site());
+                let ii = Index::from(i);
+                let item = quote! { #item.#ii };
+                let entry = entry.root_converter(&item);
+                quote! {
+                    #name: #entry,
+                }
+            })
+            .collect::<TokenStream>();
+        quote! { #root.into_iter().map(|item| #output_type {
+            #entries
+        }).collect::<Vec<_>>() }
     }
 
     fn or_insert(&self, tuple_index_overwrites: &BTreeMap<usize, TokenStream>) -> TokenStream {
@@ -276,6 +307,17 @@ impl NoTransformation {
                     root.#root_index.entry(identifiable_id(&item).clone()).or_insert(item);
                 }
             },
+        }
+    }
+
+    fn root_converter(&self, root: &TokenStream) -> TokenStream {
+        match self.quantity {
+            Quantity::MaybeOne | Quantity::One => {
+                quote! { #root }
+            }
+            Quantity::AtLeastZero | Quantity::AtLeastOne => {
+                quote! { #root.into_values().collect::<Vec<_>>() }
+            }
         }
     }
 

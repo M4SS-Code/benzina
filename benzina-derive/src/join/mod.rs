@@ -116,8 +116,7 @@ impl Transformation {
         let values = self
             .entries
             .iter()
-            .flat_map(|(_key, value)| value.map_type_values())
-            .collect::<Vec<_>>();
+            .flat_map(|(_key, value)| value.map_type_values());
         quote! { ::benzina::__private::IndexMap::<_, (#(#values),*)> }
     }
 
@@ -152,8 +151,7 @@ impl Transformation {
             .entries
             .iter()
             .enumerate()
-            .map(|(i, (_name, entry))| entry.accumulator(i))
-            .collect::<TokenStream>();
+            .map(|(i, (_name, entry))| entry.accumulator(i));
 
         let one_name = if let Some(overwrite) = tuple_index_overwrites.get(&one.tuple_index) {
             overwrite.clone()
@@ -167,7 +165,7 @@ impl Transformation {
                     ::benzina::__private::IndexMap::entry(&mut #accumulator_index, #id),
                     (#(#or_insert),*)
                 );
-                #entries_mapper
+                #(#entries_mapper)*
             }
         }
     }
@@ -186,25 +184,21 @@ impl Transformation {
             entries,
         } = self;
 
-        let entries = entries
-            .iter()
-            .enumerate()
-            .map(|(i, (name, entry))| {
-                let item = Ident::new("item", Span::call_site());
-                let ii = Index::from(i);
-                let item = quote! { #item.#ii };
-                let entry = entry.presenter(&item);
-                quote! {
-                    #name: #entry,
-                }
-            })
-            .collect::<TokenStream>();
+        let entries = entries.iter().enumerate().map(|(i, (name, entry))| {
+            let item = Ident::new("item", Span::call_site());
+            let ii = Index::from(i);
+            let item = quote! { #item.#ii };
+            let entry = entry.presenter(&item);
+            quote! {
+                #name: #entry
+            }
+        });
         quote! {
             ::benzina::__private::std::iter::Iterator::collect::<::benzina::__private::std::vec::Vec<_>>(
                 ::benzina::__private::std::iter::Iterator::map(
                     ::benzina::__private::IndexMap::into_values(#accumulator),
                     |item| #output_type {
-                        #entries
+                        #(#entries),*
                     }
                 )
             )

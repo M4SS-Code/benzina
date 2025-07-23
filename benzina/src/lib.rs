@@ -4,6 +4,7 @@
 pub use self::int::{U15, U31, U63};
 #[cfg(feature = "derive")]
 pub use benzina_derive::Enum;
+pub use benzina_derive::join;
 
 #[doc(hidden)]
 pub mod __private;

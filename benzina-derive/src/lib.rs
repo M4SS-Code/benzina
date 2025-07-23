@@ -1,9 +1,12 @@
 use quote::ToTokens;
 use syn::{DeriveInput, parse_macro_input};
 
+use crate::join::Join;
+
 use self::enum_derive::Enum;
 
 mod enum_derive;
+mod join;
 mod rename_rule;
 
 /// Derive [`FromSql`] and [`ToSql`] for a Rust enum.
@@ -68,4 +71,11 @@ pub fn benzina_enum_derive(input: proc_macro::TokenStream) -> proc_macro::TokenS
     Enum::parse(input)
         .map_or_else(syn::Error::into_compile_error, ToTokens::into_token_stream)
         .into()
+}
+
+#[proc_macro]
+pub fn join(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as Join);
+
+    input.into_token_stream().into()
 }

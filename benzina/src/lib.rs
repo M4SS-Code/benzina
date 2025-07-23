@@ -6,6 +6,7 @@ pub use self::int::{U15, U31, U63};
 pub use benzina_derive::{Enum, join};
 
 #[doc(hidden)]
+#[cfg(feature = "derive")]
 pub mod __private;
 #[cfg(feature = "postgres")]
 pub mod error;

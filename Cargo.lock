@@ -8,6 +8,7 @@ version = "0.3.6"
 dependencies = [
  "benzina-derive",
  "diesel",
+ "indexmap",
  "serde",
  "serde_test",
  "utoipa",

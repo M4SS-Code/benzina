@@ -26,6 +26,7 @@ serde = { version = "1", optional = true }
 utoipa = { version = "5", optional = true }
 benzina-derive = { path = "../benzina-derive", version = "=0.3.6", optional = true }
 uuid = { version = ">=0.7.0, <2.0.0", default-features = false, optional = true }
+indexmap = { version = "2.10", optional = true }
 
 [dev-dependencies]
 serde_test = "1"
@@ -33,7 +34,7 @@ uuid = { version = ">=0.7.0, <2.0.0", default-features = false, features = ["v4"
 
 [features]
 default = ["derive"]
-derive = ["dep:benzina-derive"]
+derive = ["dep:benzina-derive", "dep:indexmap"]
 
 postgres = ["benzina-derive?/postgres", "diesel", "diesel/postgres_backend"]
 typed-uuid = ["postgres", "diesel/uuid", "dep:uuid"]

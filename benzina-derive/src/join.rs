@@ -125,7 +125,7 @@ impl NestedOrNot {
     fn or_insert(&self, tuple_index_overwrites: &BTreeMap<usize, TokenStream>) -> TokenStream {
         match self {
             Self::Nested(_nested) => {
-                quote! { HashMap::<_, _>::new(), }
+                quote! { ::benzina::__private::indexmap::IndexMap::<_, _>::new(), }
             }
             Self::Not(not) => not.or_insert(tuple_index_overwrites),
         }
@@ -151,7 +151,7 @@ impl Transformation {
             .iter()
             .flat_map(|(_key, value)| value.generate_hashmap_values())
             .collect::<TokenStream>();
-        quote! { HashMap::<_, (#values)> }
+        quote! { ::benzina::__private::indexmap::IndexMap::<_, (#values)> }
     }
 
     fn row_handlers(&self, root_index: Option<usize>) -> TokenStream {
@@ -195,7 +195,7 @@ impl Transformation {
         };
         quote! {
             #wrapper {
-                let mut root = #root_index.entry(identifiable_id(&#one_name).clone()).or_insert((#or_insert));
+                let mut root = #root_index.entry(::benzina::__private::identifiable_id(&#one_name).clone()).or_insert((#or_insert));
                 #entries_mapper
             }
         }
@@ -270,7 +270,7 @@ impl NoTransformation {
                 _,
             },
             Quantity::AtLeastZero | Quantity::AtLeastOne => quote! {
-                HashMap::<_, _>,
+                ::benzina::__private::indexmap::IndexMap::<_, _>,
             },
         }
     }
@@ -290,14 +290,14 @@ impl NoTransformation {
             Quantity::AtLeastZero => quote! {
                 {
                     if let Some(item) = row.#tuple_index {
-                        root.#root_index.entry(identifiable_id(&item).clone()).or_insert(item);
+                        root.#root_index.entry(::benzina::__private::identifiable_id(&item).clone()).or_insert(item);
                     }
                 }
             },
             Quantity::AtLeastOne => quote! {
                 {
                     let item = row.#tuple_index;
-                    root.#root_index.entry(identifiable_id(&item).clone()).or_insert(item);
+                    root.#root_index.entry(::benzina::__private::identifiable_id(&item).clone()).or_insert(item);
                 }
             },
         }
@@ -326,7 +326,7 @@ impl NoTransformation {
                 }
             }
             Quantity::AtLeastZero | Quantity::AtLeastOne => {
-                quote! { HashMap::<_, _>::new(), }
+                quote! { ::benzina::__private::indexmap::IndexMap::<_, _>::new(), }
             }
         }
     }

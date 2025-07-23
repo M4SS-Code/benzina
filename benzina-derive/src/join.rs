@@ -124,11 +124,7 @@ impl NestedOrNot {
 
     fn or_insert(&self, tuple_index_overwrites: &BTreeMap<usize, TokenStream>) -> TokenStream {
         match self {
-            Self::Nested(nested) => {
-                let values = nested
-                    .iter()
-                    .flat_map(|item| item.or_insert(tuple_index_overwrites))
-                    .collect::<TokenStream>();
+            Self::Nested(_nested) => {
                 quote! { HashMap::<_, _>::new(), }
             }
             Self::Not(not) => not.or_insert(tuple_index_overwrites),

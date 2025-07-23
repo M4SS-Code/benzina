@@ -94,16 +94,6 @@ impl NestedOrNot {
         }
     }
 
-    fn presenter(&self, accumulator: &TokenStream) -> TokenStream {
-        match self {
-            Self::Nested(nested) => nested
-                .iter()
-                .flat_map(|item| item.presenter(accumulator))
-                .collect::<TokenStream>(),
-            Self::Not(not) => not.presenter(accumulator),
-        }
-    }
-
     fn or_insert(&self, tuple_index_overwrites: &BTreeMap<usize, TokenStream>) -> TokenStream {
         match self {
             Self::Nested(_nested) => {
@@ -111,6 +101,16 @@ impl NestedOrNot {
                 quote! { #new_indexmap, }
             }
             Self::Not(not) => not.or_insert(tuple_index_overwrites),
+        }
+    }
+
+    fn presenter(&self, accumulator: &TokenStream) -> TokenStream {
+        match self {
+            Self::Nested(nested) => nested
+                .iter()
+                .flat_map(|item| item.presenter(accumulator))
+                .collect::<TokenStream>(),
+            Self::Not(not) => not.presenter(accumulator),
         }
     }
 }
@@ -176,6 +176,13 @@ impl Transformation {
         }
     }
 
+    fn or_insert(&self, tuple_index_overwrites: &BTreeMap<usize, TokenStream>) -> TokenStream {
+        self.entries
+            .iter()
+            .map(|(_name, entry)| entry.or_insert(tuple_index_overwrites))
+            .collect()
+    }
+
     fn presenter(&self, accumulator: &TokenStream) -> TokenStream {
         let Self {
             quantity: _,
@@ -206,13 +213,6 @@ impl Transformation {
                 )
             )
         }
-    }
-
-    fn or_insert(&self, tuple_index_overwrites: &BTreeMap<usize, TokenStream>) -> TokenStream {
-        self.entries
-            .iter()
-            .map(|(_name, entry)| entry.or_insert(tuple_index_overwrites))
-            .collect()
     }
 }
 
@@ -277,21 +277,6 @@ impl NoTransformation {
         }
     }
 
-    fn presenter(&self, accumulator: &TokenStream) -> TokenStream {
-        match self.quantity {
-            Quantity::MaybeOne | Quantity::One | Quantity::AssumeOne => {
-                quote! { #accumulator }
-            }
-            Quantity::AtLeastZero | Quantity::AtLeastOne => {
-                quote! {
-                    ::benzina::__private::std::iter::Iterator::collect::<::benzina::__private::std::vec::Vec<_>>(
-                        ::benzina::__private::IndexMap::into_values(#accumulator)
-                    )
-                }
-            }
-        }
-    }
-
     fn or_insert(&self, tuple_index_overwrites: &BTreeMap<usize, TokenStream>) -> TokenStream {
         match self.quantity {
             Quantity::MaybeOne => quote! { ::benzina::__private::std::option::Option::None, },
@@ -326,6 +311,21 @@ impl NoTransformation {
             Quantity::AtLeastZero | Quantity::AtLeastOne => {
                 let new_indexmap = NewIndexMap.into_token_stream();
                 quote! { #new_indexmap, }
+            }
+        }
+    }
+
+    fn presenter(&self, accumulator: &TokenStream) -> TokenStream {
+        match self.quantity {
+            Quantity::MaybeOne | Quantity::One | Quantity::AssumeOne => {
+                quote! { #accumulator }
+            }
+            Quantity::AtLeastZero | Quantity::AtLeastOne => {
+                quote! {
+                    ::benzina::__private::std::iter::Iterator::collect::<::benzina::__private::std::vec::Vec<_>>(
+                        ::benzina::__private::IndexMap::into_values(#accumulator)
+                    )
+                }
             }
         }
     }

@@ -74,12 +74,9 @@ impl ToTokens for Join {
 }
 
 impl NestedOrNot {
-    fn map_type_values(&self) -> TokenStream {
+    fn map_type_values(&self) -> Vec<TokenStream> {
         match self {
-            Self::Nested(nested) => nested
-                .iter()
-                .flat_map(Transformation::map_type)
-                .collect::<TokenStream>(),
+            Self::Nested(nested) => nested.iter().map(Transformation::map_type).collect(),
             Self::Not(not) => not.map_type_values(),
         }
     }
@@ -120,8 +117,8 @@ impl Transformation {
             .entries
             .iter()
             .flat_map(|(_key, value)| value.map_type_values())
-            .collect::<TokenStream>();
-        quote! { ::benzina::__private::IndexMap::<_, (#values)> }
+            .collect::<Vec<_>>();
+        quote! { ::benzina::__private::IndexMap::<_, (#(#values),*)> }
     }
 
     fn accumulator(&self, accumulator_index: Option<usize>) -> TokenStream {
@@ -216,17 +213,17 @@ impl Transformation {
 }
 
 impl NoTransformation {
-    fn map_type_values(&self) -> TokenStream {
+    fn map_type_values(&self) -> Vec<TokenStream> {
         match self.quantity {
-            Quantity::MaybeOne => quote! {
-                Option<_>,
-            },
-            Quantity::One | Quantity::AssumeOne => quote! {
-                _,
-            },
-            Quantity::AtLeastZero | Quantity::AtLeastOne => quote! {
-                ::benzina::__private::IndexMap::<_, _>,
-            },
+            Quantity::MaybeOne => vec![quote! {
+                Option<_>
+            }],
+            Quantity::One | Quantity::AssumeOne => vec![quote! {
+                _
+            }],
+            Quantity::AtLeastZero | Quantity::AtLeastOne => vec![quote! {
+                ::benzina::__private::IndexMap::<_, _>
+            }],
         }
     }
 

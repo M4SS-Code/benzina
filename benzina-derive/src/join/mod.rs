@@ -2,40 +2,36 @@ use std::collections::BTreeMap;
 
 use proc_macro2::{Span, TokenStream};
 use quote::{ToTokens, quote};
-use syn::{
-    Ident, Index, LitInt, Token, braced,
-    parse::{Parse, ParseStream},
-    punctuated::Punctuated,
+use syn::{Ident, Index, Token, punctuated::Punctuated};
+
+use self::{
+    quantity::Quantity,
+    utils::{Identifiable, NewIndexMap},
 };
+
+mod parse;
+mod quantity;
+mod utils;
 
 pub(crate) struct Join {
     input: Ident,
     transformation: Transformation,
 }
 
-enum NestedOrNot {
+pub(super) enum NestedOrNot {
     Nested(Punctuated<Transformation, Token![,]>),
     Not(NoTransformation),
 }
 
-struct Transformation {
+pub(super) struct Transformation {
     quantity: Quantity,
     output_type: Ident,
     entries: Punctuated<(Ident, NestedOrNot), Token![,]>,
 }
 
-struct NoTransformation {
+pub(super) struct NoTransformation {
     quantity: Quantity,
     tuple_index: usize,
-}
-
-#[derive(Debug, Copy, Clone)]
-enum Quantity {
-    MaybeOne,
-    One,
-    AssumeOne,
-    AtLeastZero,
-    AtLeastOne,
 }
 
 impl Join {
@@ -59,20 +55,6 @@ impl Join {
     fn generate_root_converter(&self) -> TokenStream {
         let root = quote! { root };
         self.transformation.root_converter(&root)
-    }
-}
-
-impl Parse for Join {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let input_ = input.parse()?;
-        input.parse::<Token![,]>()?;
-        let transformation = input.parse()?;
-        input.parse::<Token![,]>()?;
-
-        Ok(Self {
-            input: input_,
-            transformation,
-        })
     }
 }
 
@@ -129,19 +111,6 @@ impl NestedOrNot {
                 quote! { #new_indexmap, }
             }
             Self::Not(not) => not.or_insert(tuple_index_overwrites),
-        }
-    }
-}
-
-impl Parse for NestedOrNot {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        if let Ok(not) = input.fork().parse() {
-            // FIXME: can we advance the above `fork`?
-            let _ = input.parse::<NoTransformation>()?;
-            Ok(Self::Not(not))
-        } else {
-            let conversions = Punctuated::parse_terminated(input)?;
-            Ok(Self::Nested(conversions))
         }
     }
 }
@@ -244,32 +213,6 @@ impl Transformation {
             .iter()
             .map(|(_name, entry)| entry.or_insert(tuple_index_overwrites))
             .collect()
-    }
-}
-
-impl Parse for Transformation {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let quantity = input.parse()?;
-        input.parse::<Token![<]>()?;
-
-        let output_type = input.parse()?;
-        let content;
-        braced!(content in input);
-
-        let entries = Punctuated::parse_terminated_with(&content, |input| {
-            let field = input.parse::<Ident>()?;
-            input.parse::<Token![:]>()?;
-            let value = input.parse::<NestedOrNot>()?;
-            Ok((field, value))
-        })?;
-
-        input.parse::<Token![>]>()?;
-
-        Ok(Self {
-            quantity,
-            output_type,
-            entries,
-        })
     }
 }
 
@@ -385,62 +328,5 @@ impl NoTransformation {
                 quote! { #new_indexmap, }
             }
         }
-    }
-}
-
-impl Parse for NoTransformation {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let quantity = input.parse()?;
-        input.parse::<Token![<]>()?;
-        let tuple_index = input.parse::<LitInt>()?.base10_parse()?;
-        input.parse::<Token![>]>()?;
-        Ok(Self {
-            quantity,
-            tuple_index,
-        })
-    }
-}
-
-impl Parse for Quantity {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let quantity = input.parse::<Ident>()?;
-        match &*quantity.to_string() {
-            "Option" => Ok(Self::MaybeOne),
-            "One" => Ok(Self::One),
-            "AssumeOne" => Ok(Self::AssumeOne),
-            "Vec0" => Ok(Self::AtLeastZero),
-            "Vec" => Ok(Self::AtLeastOne),
-            raw_quantity => Err(syn::Error::new(
-                quantity.span(),
-                format!(
-                    "Unknown quantity `{raw_quantity}`. Expected `Option`, `One`, `AssumeOne`, `Vec0` or `Vec`"
-                ),
-            )),
-        }
-    }
-}
-
-struct NewIndexMap;
-
-impl ToTokens for NewIndexMap {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        tokens.extend(quote! {
-            ::benzina::__private::new_indexmap::<_, _>()
-        });
-    }
-}
-
-struct Identifiable<T> {
-    table: T,
-}
-
-impl<T: ToTokens> ToTokens for Identifiable<T> {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        let Self { table } = self;
-        tokens.extend(quote! {
-            ::benzina::__private::std::clone::Clone::clone(
-                <_ as ::benzina::__private::diesel::associations::Identifiable>::id(&#table)
-            )
-        });
     }
 }

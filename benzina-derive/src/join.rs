@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use proc_macro2::{Span, TokenStream};
 use quote::{ToTokens, quote};
 use syn::{
-    Ident, Index, LitInt, Token, Type, TypePath, braced,
+    Ident, Index, LitInt, Token, braced,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
 };
@@ -96,7 +96,7 @@ impl NestedOrNot {
         match self {
             Self::Nested(nested) => nested
                 .iter()
-                .flat_map(|item| item.generate_hashmap_values())
+                .flat_map(Transformation::generate_hashmap_values)
                 .collect::<TokenStream>(),
             Self::Not(not) => not.generate_hashmap_values(),
         }
@@ -153,7 +153,7 @@ impl Transformation {
         let values = self
             .entries
             .iter()
-            .flat_map(|(key, value)| value.generate_hashmap_values())
+            .flat_map(|(_key, value)| value.generate_hashmap_values())
             .collect::<TokenStream>();
         quote! { HashMap::<_, (#values)> }
     }
@@ -207,7 +207,7 @@ impl Transformation {
 
     fn root_converter(&self, root: &TokenStream) -> TokenStream {
         let Self {
-            quantity,
+            quantity: _,
             output_type,
             entries,
         } = self;
@@ -273,10 +273,7 @@ impl NoTransformation {
             Quantity::One => quote! {
                 _,
             },
-            Quantity::AtLeastZero => quote! {
-                HashMap::<_, _>,
-            },
-            Quantity::AtLeastOne => quote! {
+            Quantity::AtLeastZero | Quantity::AtLeastOne => quote! {
                 HashMap::<_, _>,
             },
         }

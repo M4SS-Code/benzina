@@ -407,7 +407,7 @@ impl Parse for Quantity {
             raw_quantity => Err(syn::Error::new(
                 quantity.span(),
                 format!(
-                    "Unknown quantity `{raw_quantity}`. Expected `Option`, `One`, `Vec0` or `Vec`"
+                    "Unknown quantity `{raw_quantity}`. Expected `Option`, `One`, `AssumeOne`, `Vec0` or `Vec`"
                 ),
             )),
         }

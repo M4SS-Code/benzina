@@ -94,11 +94,10 @@ impl NestedOrNot {
         }
     }
 
-    fn or_insert(&self, tuple_index_overwrites: &BTreeMap<usize, TokenStream>) -> TokenStream {
+    fn or_insert(&self, tuple_index_overwrites: &BTreeMap<usize, TokenStream>) -> Vec<TokenStream> {
         match self {
             Self::Nested(_nested) => {
-                let new_indexmap = NewIndexMap.into_token_stream();
-                quote! { #new_indexmap, }
+                vec![NewIndexMap.into_token_stream()]
             }
             Self::Not(not) => not.or_insert(tuple_index_overwrites),
         }
@@ -169,17 +168,17 @@ impl Transformation {
             #wrapper {
                 let mut accumulator = ::benzina::__private::indexmap::map::Entry::or_insert(
                     ::benzina::__private::IndexMap::entry(&mut #accumulator_index, #id),
-                    (#or_insert)
+                    (#(#or_insert),*)
                 );
                 #entries_mapper
             }
         }
     }
 
-    fn or_insert(&self, tuple_index_overwrites: &BTreeMap<usize, TokenStream>) -> TokenStream {
+    fn or_insert(&self, tuple_index_overwrites: &BTreeMap<usize, TokenStream>) -> Vec<TokenStream> {
         self.entries
             .iter()
-            .map(|(_name, entry)| entry.or_insert(tuple_index_overwrites))
+            .flat_map(|(_name, entry)| entry.or_insert(tuple_index_overwrites))
             .collect()
     }
 
@@ -277,23 +276,23 @@ impl NoTransformation {
         }
     }
 
-    fn or_insert(&self, tuple_index_overwrites: &BTreeMap<usize, TokenStream>) -> TokenStream {
+    fn or_insert(&self, tuple_index_overwrites: &BTreeMap<usize, TokenStream>) -> Vec<TokenStream> {
         match self.quantity {
-            Quantity::MaybeOne => quote! { ::benzina::__private::std::option::Option::None, },
+            Quantity::MaybeOne => vec![quote! { ::benzina::__private::std::option::Option::None }],
             Quantity::One => {
                 if let Some(overwrite) = tuple_index_overwrites.get(&self.tuple_index) {
-                    quote! { #overwrite, }
+                    vec![quote! { #overwrite }]
                 } else {
                     let tuple_index = Index::from(self.tuple_index);
-                    quote! { row.#tuple_index, }
+                    vec![quote! { row.#tuple_index }]
                 }
             }
             Quantity::AssumeOne => {
                 if let Some(overwrite) = tuple_index_overwrites.get(&self.tuple_index) {
-                    quote! { #overwrite, }
+                    vec![quote! { #overwrite }]
                 } else {
                     let tuple_index = Index::from(self.tuple_index);
-                    quote! {
+                    vec![quote! {
                         if let ::benzina::__private::std::option::Option::Some(item) = row.#tuple_index {
                             item
                         } else {
@@ -304,13 +303,13 @@ impl NoTransformation {
                                     )
                                 )
                             ));
-                        },
-                    }
+                        }
+                    }]
                 }
             }
             Quantity::AtLeastZero | Quantity::AtLeastOne => {
                 let new_indexmap = NewIndexMap.into_token_stream();
-                quote! { #new_indexmap, }
+                vec![quote! { #new_indexmap }]
             }
         }
     }

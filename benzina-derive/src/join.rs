@@ -33,6 +33,7 @@ struct NoTransformation {
 enum Quantity {
     MaybeOne,
     One,
+    AssumeOne,
     AtLeastZero,
     AtLeastOne,
 }
@@ -275,7 +276,7 @@ impl NoTransformation {
             Quantity::MaybeOne => quote! {
                 Option<_>,
             },
-            Quantity::One => quote! {
+            Quantity::One | Quantity::AssumeOne => quote! {
                 _,
             },
             Quantity::AtLeastZero | Quantity::AtLeastOne => quote! {
@@ -297,7 +298,7 @@ impl NoTransformation {
                     }
                 }
             },
-            Quantity::One => quote! {},
+            Quantity::One | Quantity::AssumeOne => quote! {},
             Quantity::AtLeastZero => {
                 let id = Identifiable {
                     table: quote! { item },
@@ -332,7 +333,7 @@ impl NoTransformation {
 
     fn root_converter(&self, root: &TokenStream) -> TokenStream {
         match self.quantity {
-            Quantity::MaybeOne | Quantity::One => {
+            Quantity::MaybeOne | Quantity::One | Quantity::AssumeOne => {
                 quote! { #root }
             }
             Quantity::AtLeastZero | Quantity::AtLeastOne => {
@@ -354,6 +355,26 @@ impl NoTransformation {
                 } else {
                     let tuple_index = Index::from(self.tuple_index);
                     quote! { row.#tuple_index, }
+                }
+            }
+            Quantity::AssumeOne => {
+                if let Some(overwrite) = tuple_index_overwrites.get(&self.tuple_index) {
+                    quote! { #overwrite, }
+                } else {
+                    let tuple_index = Index::from(self.tuple_index);
+                    quote! {
+                        if let ::benzina::__private::std::option::Option::Some(item) = row.#tuple_index {
+                            item
+                        } else {
+                            return ::benzina::__private::std::result::Result::Err(::benzina::__private::diesel::result::Error::DeserializationError(
+                                ::benzina::__private::std::boxed::Box::from(
+                                    ::benzina::__private::std::borrow::ToOwned::to_owned(
+                                        "`AssumeOne` value is null"
+                                    )
+                                )
+                            ));
+                        },
+                    }
                 }
             }
             Quantity::AtLeastZero | Quantity::AtLeastOne => NewIndexMap.into_token_stream(),
@@ -380,6 +401,7 @@ impl Parse for Quantity {
         match &*quantity.to_string() {
             "Option" => Ok(Self::MaybeOne),
             "One" => Ok(Self::One),
+            "AssumeOne" => Ok(Self::AssumeOne),
             "Vec0" => Ok(Self::AtLeastZero),
             "Vec" => Ok(Self::AtLeastOne),
             raw_quantity => Err(syn::Error::new(

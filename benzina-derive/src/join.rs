@@ -225,7 +225,7 @@ impl Transformation {
                 }
             })
             .collect::<TokenStream>();
-        quote! { #root.into_iter().map(|item| #output_type {
+        quote! { #root.into_values().map(|item| #output_type {
             #entries
         }).collect::<Vec<_>>() }
     }

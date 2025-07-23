@@ -147,7 +147,7 @@ impl Transformation {
         };
 
         let or_insert = self.or_insert(&tuple_index_overwrites);
-        let entries_mapper = self
+        let accumulator = self
             .entries
             .iter()
             .enumerate()
@@ -165,7 +165,7 @@ impl Transformation {
                     ::benzina::__private::IndexMap::entry(&mut #accumulator_index, #id),
                     (#(#or_insert),*)
                 );
-                #(#entries_mapper)*
+                #(#accumulator)*
             }
         }
     }

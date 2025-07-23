@@ -82,7 +82,7 @@ impl ToTokens for Join {
         let root_converter = self.generate_root_converter();
         tokens.extend(quote! {
             {
-                let mut root = #hashmap::new();
+                let mut root: #hashmap = ::benzina::__private::new_indexmap();
                 #root_filler
                 #root_converter
             }
@@ -149,7 +149,7 @@ impl Transformation {
             .iter()
             .flat_map(|(_key, value)| value.generate_hashmap_values())
             .collect::<TokenStream>();
-        quote! { ::benzina::__private::indexmap::IndexMap::<_, (#values)> }
+        quote! { ::benzina::__private::IndexMap::<_, (#values)> }
     }
 
     fn row_handlers(&self, root_index: Option<usize>) -> TokenStream {
@@ -195,7 +195,7 @@ impl Transformation {
         quote! {
             #wrapper {
                 let mut root = ::benzina::__private::indexmap::map::Entry::or_insert(
-                    ::benzina::__private::indexmap::IndexMap::entry(&mut #root_index, #id),
+                    ::benzina::__private::IndexMap::entry(&mut #root_index, #id),
                     (#or_insert)
                 );
                 #entries_mapper
@@ -226,7 +226,7 @@ impl Transformation {
         quote! {
             ::benzina::__private::std::iter::Iterator::collect::<::benzina::__private::std::vec::Vec<_>>(
                 ::benzina::__private::std::iter::Iterator::map(
-                    ::benzina::__private::indexmap::IndexMap::into_values(#root),
+                    ::benzina::__private::IndexMap::into_values(#root),
                     |item| #output_type {
                         #entries
                     }
@@ -279,7 +279,7 @@ impl NoTransformation {
                 _,
             },
             Quantity::AtLeastZero | Quantity::AtLeastOne => quote! {
-                ::benzina::__private::indexmap::IndexMap::<_, _>,
+                ::benzina::__private::IndexMap::<_, _>,
             },
         }
     }
@@ -306,7 +306,7 @@ impl NoTransformation {
                     {
                         if let ::benzina::__private::std::option::Option::Some(item) = #row {
                             ::benzina::__private::indexmap::map::Entry::or_insert(
-                                ::benzina::__private::indexmap::IndexMap::entry(&mut root.#root_index, #id),
+                                ::benzina::__private::IndexMap::entry(&mut root.#root_index, #id),
                                 item
                             );
                         }
@@ -321,7 +321,7 @@ impl NoTransformation {
                     {
                         let item = #row;
                         ::benzina::__private::indexmap::map::Entry::or_insert(
-                            ::benzina::__private::indexmap::IndexMap(&mut root.#root_index, #id),
+                            ::benzina::__private::IndexMap(&mut root.#root_index, #id),
                             item
                         );
                     }
@@ -338,7 +338,7 @@ impl NoTransformation {
             Quantity::AtLeastZero | Quantity::AtLeastOne => {
                 quote! {
                     ::benzina::__private::std::iter::Iterator::collect::<::benzina::__private::std::vec::Vec<_>>(
-                        ::benzina::__private::indexmap::IndexMap::into_values(#root)
+                        ::benzina::__private::IndexMap::into_values(#root)
                     )
                 }
             }
@@ -397,7 +397,7 @@ struct NewIndexMap;
 impl ToTokens for NewIndexMap {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         tokens.extend(quote! {
-            ::benzina::__private::indexmap::IndexMap::<_, _>::new()
+            ::benzina::__private::new_indexmap::<_, _>()
         });
     }
 }

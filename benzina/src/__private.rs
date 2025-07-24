@@ -1,4 +1,6 @@
 #[cfg(feature = "derive")]
+pub use ::diesel;
+#[cfg(feature = "derive")]
 pub use ::indexmap;
 #[cfg(feature = "serde")]
 pub use ::serde;

@@ -2,6 +2,7 @@
 pub use ::indexmap;
 #[cfg(feature = "serde")]
 pub use ::serde;
+pub use ::std;
 #[cfg(feature = "typed-uuid")]
 pub use ::uuid;
 

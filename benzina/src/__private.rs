@@ -1,4 +1,4 @@
-#[cfg(feature = "derive")]
+#[cfg(any(feature = "derive", feature = "typed-uuid"))]
 pub use ::diesel;
 #[cfg(feature = "derive")]
 pub use ::indexmap;

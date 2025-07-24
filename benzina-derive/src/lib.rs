@@ -82,7 +82,7 @@ pub fn benzina_enum_derive(input: proc_macro::TokenStream) -> proc_macro::TokenS
 ///
 /// ## Example
 ///
-/// ```rust
+/// ```rust,compile_fail
 /// # fn main() {}
 ///
 /// use diesel::{

@@ -75,6 +75,11 @@ pub fn benzina_enum_derive(input: proc_macro::TokenStream) -> proc_macro::TokenS
 
 /// Convert the output of a query containing joins into a properly nested structure.
 ///
+/// <div class="warning">
+///     This macro is still in the experimental stage and may contain
+///     bugs and unhelpful error diagnostics.
+/// </div>
+///
 /// ## Example
 ///
 /// ```rust

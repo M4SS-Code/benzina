@@ -299,8 +299,7 @@ impl NoTransformation {
                 }
             }
             Quantity::AtLeastZero | Quantity::AtLeastOne => {
-                let new_indexmap = NewIndexMap.into_token_stream();
-                vec![quote! { #new_indexmap }]
+                vec![NewIndexMap.into_token_stream()]
             }
         }
     }

@@ -80,6 +80,9 @@ pub fn benzina_enum_derive(input: proc_macro::TokenStream) -> proc_macro::TokenS
 ///     bugs and unhelpful error diagnostics.
 /// </div>
 ///
+/// Enable the `rustc-hash` feature to use a faster but non-DOS-resistant hasher for
+/// the internal maps.
+///
 /// ## Example
 ///
 /// ```rust,compile_fail

@@ -38,6 +38,6 @@ rust:test:
   stage: test
   image: rust:1.88-alpine3.22
   before_script:
-    - apk add musl-dev
+    - apk add musl-dev libpq-dev
   script:
     - cargo test --all-features

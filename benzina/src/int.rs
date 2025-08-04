@@ -1,7 +1,6 @@
 use std::{
     error::Error,
     fmt::{self, Display},
-    ptr,
     str::FromStr,
 };
 
@@ -80,17 +79,6 @@ macro_rules! impl_numbers {
                 #[must_use]
                 pub const fn get_signed(self) -> $inner_signed {
                     self.get() as $inner_signed
-                }
-
-                #[must_use]
-                const fn get_ref(&self) -> &$inner {
-                    &self.0
-                }
-
-                #[must_use]
-                const fn get_signed_ref(&self) -> &$inner_signed {
-                    // SAFETY: `&u16`/`&u32`/`&u64` can be interpreted as `&i16`/`&i32`/`&i64` respectively
-                    unsafe { &*ptr::from_ref(self.get_ref()).cast::<$inner_signed>() }
                 }
 
                 /// Checked integer addition. Computes `self + rhs`, returning `None` if overflow occurred.
@@ -220,7 +208,7 @@ macro_rules! impl_numbers {
 
             impl ToSql<$sql_type, Pg> for $type {
                 fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, Pg>) -> diesel::serialize::Result {
-                    <$inner_signed as ToSql<$sql_type, Pg>>::to_sql(self.get_signed_ref(), out)
+                    <$inner_signed as ToSql<$sql_type, Pg>>::to_sql(&self.get_signed(), &mut out.reborrow())
                 }
             }
         )*

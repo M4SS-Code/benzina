@@ -16,6 +16,7 @@ repository = "https://github.com/M4SS-Code/benzina"
 rust-version = "1.83"
 
 [workspace.lints.rust]
+unsafe_code = "deny"
 unreachable_pub = "deny"
 
 [workspace.lints.clippy]

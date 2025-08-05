@@ -2,6 +2,12 @@
 
 #[cfg(feature = "postgres")]
 pub use self::int::{U15, U31, U63};
+#[cfg(feature = "json")]
+pub use self::json::{
+    Json,
+    binary::Jsonb,
+    nullable::{NullableJson, NullableJsonb},
+};
 #[cfg(feature = "derive")]
 pub use benzina_derive::{Enum, join};
 
@@ -15,6 +21,8 @@ pub mod error;
 pub mod example_generated;
 #[cfg(feature = "postgres")]
 mod int;
+#[cfg(feature = "json")]
+mod json;
 #[cfg(all(feature = "serde", feature = "postgres"))]
 mod serde;
 #[cfg(feature = "typed-uuid")]

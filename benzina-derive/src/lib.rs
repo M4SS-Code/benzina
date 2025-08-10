@@ -10,7 +10,6 @@ mod join;
 mod rename_rule;
 
 /// Derive [`FromSql`] and [`ToSql`] for a Rust enum.
-#[expect(clippy::doc_markdown, reason = "this is not a Rust type")]
 /// Represents a PostgreSQL enum as a Rust enum.
 ///
 /// ## Example

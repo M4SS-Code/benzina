@@ -19,8 +19,8 @@ impl<T: ToTokens> ToTokens for Identifiable<T> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let Self { table } = self;
         tokens.extend(quote! {
-            ::benzina::__private::std::clone::Clone::clone(
-                <_ as ::benzina::__private::diesel::associations::Identifiable>::id(&#table)
+            ::benzina::__private::deep_clone::DeepClone::deep_clone(
+                &(<_ as ::benzina::__private::diesel::associations::Identifiable>::id(&#table),)
             )
         });
     }

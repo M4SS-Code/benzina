@@ -27,8 +27,7 @@ impl Parse for NestedOrNot {
             let _ = input.parse::<NoTransformation>()?;
             Ok(Self::Not(not))
         } else {
-            let conversions = Punctuated::parse_terminated(input)?;
-            Ok(Self::Nested(conversions))
+            Ok(Self::Nested(input.parse::<Transformation>()?))
         }
     }
 }

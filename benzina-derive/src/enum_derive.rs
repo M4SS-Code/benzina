@@ -145,10 +145,10 @@ impl ToTokens for Enum {
         tokens.append_all(quote! {
             impl #ident {
                 #[doc(hidden)]
-                fn __benzina03_from_bytes(val: &[u8]) -> ::std::option::Option<Self> {
+                fn __benzina03_from_bytes(val: &[u8]) -> ::benzina::__private::std::option::Option<Self> {
                     match val {
                         #(#from_bytes_arms)*
-                        _ => ::std::option::Option::None,
+                        _ => ::benzina::__private::std::option::Option::None,
                     }
                 }
 
@@ -164,22 +164,32 @@ impl ToTokens for Enum {
         #[cfg(feature = "postgres")]
         tokens.append_all(quote! {
             #[automatically_derived]
-            impl ::diesel::deserialize::FromSql<#sql_type, ::diesel::pg::Pg> for #ident {
-                fn from_sql(bytes: ::diesel::pg::PgValue<'_>) -> ::diesel::deserialize::Result<Self> {
+            impl ::benzina::__private::diesel::deserialize::FromSql<#sql_type, ::benzina::__private::diesel::pg::Pg> for #ident {
+                fn from_sql(bytes: ::benzina::__private::diesel::pg::PgValue<'_>) -> ::benzina::__private::diesel::deserialize::Result<Self> {
                     match Self::__benzina03_from_bytes(bytes.as_bytes()) {
-                        ::std::option::Option::Some(this) => ::std::result::Result::Ok(this),
-                        ::std::option::Option::None => ::std::result::Result::Err("Unrecognized enum variant".into()),
+                        ::benzina::__private::std::option::Option::Some(this) => {
+                            ::benzina::__private::std::result::Result::Ok(this)
+                        },
+                        ::benzina::__private::std::option::Option::None => {
+                            ::benzina::__private::std::result::Result::Err(
+                                ::benzina::__private::std::convert::Into::into(
+                                    "Unrecognized enum variant"
+                                )
+                            )
+                        },
                     }
                 }
             }
 
             #[automatically_derived]
-            impl ::diesel::serialize::ToSql<#sql_type, ::diesel::pg::Pg> for #ident {
-                fn to_sql<'b>(&'b self, out: &mut ::diesel::serialize::Output<'b, '_, ::diesel::pg::Pg>) -> ::diesel::serialize::Result {
+            impl ::benzina::__private::diesel::serialize::ToSql<#sql_type, ::benzina::__private::diesel::pg::Pg> for #ident {
+                fn to_sql<'b>(&'b self, out: &mut ::benzina::__private::diesel::serialize::Output<'b, '_, ::benzina::__private::diesel::pg::Pg>) -> ::benzina::__private::diesel::serialize::Result {
                     let sql_val = self.__benzina03_as_str();
-                    ::std::io::Write::write_all(out, sql_val.as_bytes())?;
+                    ::benzina::__private::std::io::Write::write_all(out, sql_val.as_bytes())?;
 
-                    ::std::result::Result::Ok(diesel::serialize::IsNull::No)
+                    ::benzina::__private::std::result::Result::Ok(
+                        ::benzina::__private::diesel::serialize::IsNull::No
+                    )
                 }
             }
         });
@@ -187,22 +197,30 @@ impl ToTokens for Enum {
         #[cfg(feature = "mysql")]
         tokens.append_all(quote! {
             #[automatically_derived]
-            impl ::diesel::deserialize::FromSql<#sql_type, ::diesel::mysql::Mysql> for #ident {
-                fn from_sql(bytes: ::diesel::mysql::MysqlValue<'_>) -> ::diesel::deserialize::Result<Self> {
+            impl ::benzina::__private::diesel::deserialize::FromSql<#sql_type, ::benzina::__private::diesel::mysql::Mysql> for #ident {
+                fn from_sql(bytes: ::benzina::__private::diesel::mysql::MysqlValue<'_>) -> ::benzina::__private::diesel::deserialize::Result<Self> {
                     match Self::__benzina03_from_bytes(bytes.as_bytes()) {
-                        ::std::option::Option::Some(this) => ::std::result::Result::Ok(this),
-                        ::std::option::Option::None => ::std::result::Result::Err("Unrecognized enum variant".into()),
+                        ::benzina::__private::std::option::Option::Some(this) => {
+                            ::benzina::__private::std::result::Result::Ok(this)
+                        },
+                        ::benzina::__private::std::option::Option::None => {
+                            ::benzina::__private::std::result::Result::Err(
+                                ::benzina::__private::std::convert::Into::into(
+                                    "Unrecognized enum variant"
+                                )
+                            )
+                        },
                     }
                 }
             }
 
             #[automatically_derived]
-            impl ::diesel::serialize::ToSql<#sql_type, ::diesel::mysql::Mysql> for #ident {
-                fn to_sql<'b>(&'b self, out: &mut ::diesel::serialize::Output<'b, '_, ::diesel::mysql::Mysql>) -> ::diesel::serialize::Result {
+            impl ::benzina::__private::diesel::serialize::ToSql<#sql_type, ::benzina::__private::diesel::mysql::Mysql> for #ident {
+                fn to_sql<'b>(&'b self, out: &mut ::benzina::__private::diesel::serialize::Output<'b, '_, ::benzina::__private::diesel::mysql::Mysql>) -> ::benzina::__private::diesel::serialize::Result {
                     let sql_val = self.__benzina03_as_str();
-                    ::std::io::Write::write_all(out, sql_val.as_bytes())?;
+                    ::benzina::__private::std::io::Write::write_all(out, sql_val.as_bytes())?;
 
-                    ::std::result::Result::Ok(diesel::serialize::IsNull::No)
+                    ::benzina::__private::std::result::Result::Ok(::benzina::__private::diesel::serialize::IsNull::No)
                 }
             }
         });
@@ -231,7 +249,7 @@ impl EnumVariant {
                 let original_name_ident = Ident::new(original_name, *span);
                 let rename_bytes = LitByteStr::new(rename.as_bytes(), *span);
                 tokens.append_all(quote! {
-                    #rename_bytes => ::std::option::Option::Some(Self::#original_name_ident),
+                    #rename_bytes => ::benzina::__private::std::option::Option::Some(Self::#original_name_ident),
                 });
             }
         }

@@ -173,7 +173,7 @@ impl Transformation {
 
     fn presenter(&self, accumulator: &TokenStream) -> TokenStream {
         let Self {
-            quantity: _,
+            quantity,
             output_type,
             entries,
         } = self;
@@ -187,15 +187,41 @@ impl Transformation {
                 #name: #entry
             }
         });
-        quote! {
-            ::benzina::__private::std::iter::Iterator::collect::<::benzina::__private::std::vec::Vec<_>>(
-                ::benzina::__private::std::iter::Iterator::map(
-                    ::benzina::__private::IndexMap::into_values(#accumulator),
-                    |item| #output_type {
-                        #(#entries),*
-                    }
-                )
+        let iterator = quote! {
+            ::benzina::__private::std::iter::Iterator::map(
+                ::benzina::__private::IndexMap::into_values(#accumulator),
+                |item| #output_type {
+                    #(#entries),*
+                }
             )
+        };
+        match quantity {
+            Quantity::MaybeOne => {
+                quote! {
+                    ::benzina::__private::std::iter::Iterator::next(
+                        &mut #iterator
+                    )
+                }
+            }
+            Quantity::One | Quantity::AssumeOne => {
+                quote! {
+                    match ::benzina::__private::std::iter::Iterator::next(
+                        &mut #iterator
+                    ) {
+                        Some(item) => item,
+                        None => return ::benzina::__private::std::result::Result::Err(
+                            ::benzina::__private::diesel::result::Error::NotFound
+                        )
+                    }
+                }
+            }
+            Quantity::AtLeastZero | Quantity::AtLeastOne => {
+                quote! {
+                    ::benzina::__private::std::iter::Iterator::collect::<::benzina::__private::std::vec::Vec<_>>(
+                        #iterator
+                    )
+                }
+            }
         }
     }
 }

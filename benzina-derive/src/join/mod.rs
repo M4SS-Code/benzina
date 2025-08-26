@@ -204,7 +204,7 @@ impl NoTransformation {
     fn map_type_values(&self) -> Vec<TokenStream> {
         match self.quantity {
             Quantity::MaybeOne => vec![quote! {
-                Option<_>
+                ::benzina::__private::std::option::Option<_>
             }],
             Quantity::One | Quantity::AssumeOne => vec![quote! {
                 _

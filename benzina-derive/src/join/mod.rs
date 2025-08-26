@@ -19,7 +19,7 @@ pub(crate) struct Join {
 }
 
 pub(super) enum NestedOrNot {
-    Nested(Punctuated<Transformation, Token![,]>),
+    Nested(Transformation),
     Not(NoTransformation),
 }
 
@@ -76,17 +76,14 @@ impl ToTokens for Join {
 impl NestedOrNot {
     fn map_type_values(&self) -> Vec<TokenStream> {
         match self {
-            Self::Nested(nested) => nested.iter().map(Transformation::map_type).collect(),
+            Self::Nested(nested) => vec![nested.map_type()],
             Self::Not(not) => not.map_type_values(),
         }
     }
 
     fn accumulator(&self, accumulator_index: usize) -> TokenStream {
         match self {
-            Self::Nested(nested) => nested
-                .iter()
-                .flat_map(|item| item.accumulator(Some(accumulator_index)))
-                .collect(),
+            Self::Nested(nested) => nested.accumulator(Some(accumulator_index)),
             Self::Not(not) => not.accumulator(accumulator_index),
         }
     }
@@ -102,10 +99,7 @@ impl NestedOrNot {
 
     fn presenter(&self, accumulator: &TokenStream) -> TokenStream {
         match self {
-            Self::Nested(nested) => nested
-                .iter()
-                .flat_map(|item| item.presenter(accumulator))
-                .collect::<TokenStream>(),
+            Self::Nested(nested) => nested.presenter(accumulator),
             Self::Not(not) => not.presenter(accumulator),
         }
     }

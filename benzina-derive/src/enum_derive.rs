@@ -158,7 +158,7 @@ impl ToTokens for Enum {
         tokens.append_all(quote! {
             impl #ident {
                 #[doc(hidden)]
-                fn __benzina03_from_bytes(val: &[u8]) -> #crate_name::__private::std::option::Option<Self> {
+                fn __benzina04_from_bytes(val: &[u8]) -> #crate_name::__private::std::option::Option<Self> {
                     match val {
                         #(#from_bytes_arms)*
                         _ => #crate_name::__private::std::option::Option::None,
@@ -166,7 +166,7 @@ impl ToTokens for Enum {
                 }
 
                 #[doc(hidden)]
-                fn __benzina03_as_str(&self) -> &'static str {
+                fn __benzina04_as_str(&self) -> &'static str {
                     match self {
                         #(#to_str_arms)*
                     }
@@ -179,7 +179,7 @@ impl ToTokens for Enum {
             #[automatically_derived]
             impl #crate_name::__private::diesel::deserialize::FromSql<#sql_type, #crate_name::__private::diesel::pg::Pg> for #ident {
                 fn from_sql(bytes: #crate_name::__private::diesel::pg::PgValue<'_>) -> #crate_name::__private::diesel::deserialize::Result<Self> {
-                    match Self::__benzina03_from_bytes(bytes.as_bytes()) {
+                    match Self::__benzina04_from_bytes(bytes.as_bytes()) {
                         #crate_name::__private::std::option::Option::Some(this) => {
                             #crate_name::__private::std::result::Result::Ok(this)
                         },
@@ -197,7 +197,7 @@ impl ToTokens for Enum {
             #[automatically_derived]
             impl #crate_name::__private::diesel::serialize::ToSql<#sql_type, #crate_name::__private::diesel::pg::Pg> for #ident {
                 fn to_sql<'b>(&'b self, out: &mut #crate_name::__private::diesel::serialize::Output<'b, '_, #crate_name::__private::diesel::pg::Pg>) -> #crate_name::__private::diesel::serialize::Result {
-                    let sql_val = self.__benzina03_as_str();
+                    let sql_val = self.__benzina04_as_str();
                     #crate_name::__private::std::io::Write::write_all(out, sql_val.as_bytes())?;
 
                     #crate_name::__private::std::result::Result::Ok(
@@ -212,7 +212,7 @@ impl ToTokens for Enum {
             #[automatically_derived]
             impl #crate_name::__private::diesel::deserialize::FromSql<#sql_type, #crate_name::__private::diesel::mysql::Mysql> for #ident {
                 fn from_sql(bytes: #crate_name::__private::diesel::mysql::MysqlValue<'_>) -> #crate_name::__private::diesel::deserialize::Result<Self> {
-                    match Self::__benzina03_from_bytes(bytes.as_bytes()) {
+                    match Self::__benzina04_from_bytes(bytes.as_bytes()) {
                         #crate_name::__private::std::option::Option::Some(this) => {
                             #crate_name::__private::std::result::Result::Ok(this)
                         },
@@ -230,7 +230,7 @@ impl ToTokens for Enum {
             #[automatically_derived]
             impl #crate_name::__private::diesel::serialize::ToSql<#sql_type, #crate_name::__private::diesel::mysql::Mysql> for #ident {
                 fn to_sql<'b>(&'b self, out: &mut #crate_name::__private::diesel::serialize::Output<'b, '_, #crate_name::__private::diesel::mysql::Mysql>) -> #crate_name::__private::diesel::serialize::Result {
-                    let sql_val = self.__benzina03_as_str();
+                    let sql_val = self.__benzina04_as_str();
                     #crate_name::__private::std::io::Write::write_all(out, sql_val.as_bytes())?;
 
                     #crate_name::__private::std::result::Result::Ok(#crate_name::__private::diesel::serialize::IsNull::No)

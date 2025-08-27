@@ -39,38 +39,44 @@ impl Enum {
         };
 
         let (rename_all, sql_type) = {
-            let Some(attr) = input
+            let mut first_attr = None;
+            let mut sql_type = None;
+            let mut rename_all = None;
+
+            for attr in input
                 .attrs
                 .iter()
-                .find(|attr| attr.path().is_ident("benzina"))
-            else {
+                .filter(|attr| attr.path().is_ident("benzina"))
+            {
+                first_attr.get_or_insert(attr);
+
+                attr.parse_nested_meta(|meta| {
+                    if meta.path.is_ident("sql_type") {
+                        meta.input.parse::<Token![=]>()?;
+                        let val: Type = meta.input.parse()?;
+                        try_set!(sql_type, val, val);
+                    } else if meta.path.is_ident("rename_all") {
+                        meta.input.parse::<Token![=]>()?;
+                        let val: LitStr = meta.input.parse()?;
+                        try_set!(
+                            rename_all,
+                            val.value()
+                                .parse()
+                                .map_err(|err| syn::Error::new_spanned(val, err))?,
+                            val
+                        );
+                    }
+
+                    Ok(())
+                })?;
+            }
+
+            let Some(first_attr) = first_attr else {
                 fail!(e.enum_token, "expected #[benzina(...)] attribute");
             };
 
-            let mut sql_type = None;
-            let mut rename_all = None;
-            attr.parse_nested_meta(|meta| {
-                if meta.path.is_ident("sql_type") {
-                    meta.input.parse::<Token![=]>()?;
-                    let val: Type = meta.input.parse()?;
-                    try_set!(sql_type, val, val);
-                } else if meta.path.is_ident("rename_all") {
-                    meta.input.parse::<Token![=]>()?;
-                    let val: LitStr = meta.input.parse()?;
-                    try_set!(
-                        rename_all,
-                        val.value()
-                            .parse()
-                            .map_err(|err| syn::Error::new_spanned(val, err))?,
-                        val
-                    );
-                }
-
-                Ok(())
-            })?;
-
             let Some(sql_type) = sql_type else {
-                fail!(attr, "expected `sql_type`");
+                fail!(first_attr, "expected `sql_type`");
             };
 
             (rename_all.unwrap_or(RenameRule::None), sql_type)
@@ -85,12 +91,13 @@ impl Enum {
                 }
 
                 let name = variant.ident.to_string();
-                let rename = if let Some(attr) = variant
+                let mut rename = None;
+
+                for attr in variant
                     .attrs
                     .iter()
-                    .find(|attr| attr.path().is_ident("benzina"))
+                    .filter(|attr| attr.path().is_ident("benzina"))
                 {
-                    let mut rename = None;
                     attr.parse_nested_meta(|meta| {
                         if meta.path.is_ident("rename") {
                             meta.input.parse::<Token![=]>()?;
@@ -100,11 +107,7 @@ impl Enum {
 
                         Ok(())
                     })?;
-
-                    rename
-                } else {
-                    None
-                };
+                }
 
                 let span = variant.span();
                 Ok(EnumVariant {

@@ -1,5 +1,9 @@
+use proc_macro2::Span;
 use quote::ToTokens;
-use syn::{DeriveInput, parse_macro_input};
+use syn::{
+    DeriveInput, Ident, Path, PathArguments, PathSegment, parse_macro_input,
+    punctuated::Punctuated, token::PathSep,
+};
 
 use crate::join::Join;
 
@@ -230,4 +234,21 @@ pub fn benzina_enum_derive(input: proc_macro::TokenStream) -> proc_macro::TokenS
 pub fn join(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as Join);
     input.into_token_stream().into()
+}
+
+#[expect(clippy::ref_option, reason = "it's easier to use")]
+fn crate_name(crate_name: &Option<Path>) -> Path {
+    crate_name.clone().unwrap_or_else(|| {
+        let mut segments = Punctuated::new();
+        segments.push(PathSegment {
+            ident: Ident::new("benzina", Span::call_site()),
+            arguments: PathArguments::None,
+        });
+        Path {
+            leading_colon: Some(PathSep {
+                spans: [Span::call_site(); 2],
+            }),
+            segments,
+        }
+    })
 }

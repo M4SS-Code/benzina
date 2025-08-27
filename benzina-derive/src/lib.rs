@@ -46,6 +46,7 @@ mod rename_rule;
 ///     sql_type = crate::schema::sql_types::Animal,
 ///     rename_all = "snake_case"
 /// )]
+/// # #[benzina(crate = fake_benzina)]
 /// pub enum Animal {
 ///     Chicken,
 ///     Duck,
@@ -63,6 +64,13 @@ mod rename_rule;
 ///         pub struct Animal;
 ///     }
 /// }
+/// #
+/// # mod fake_benzina {
+/// #     pub mod __private {
+/// #         pub use std;
+/// #         pub use diesel;
+/// #     }
+/// # }
 /// ```
 ///
 /// [`FromSql`]: https://docs.rs/diesel/latest/diesel/deserialize/trait.FromSql.html

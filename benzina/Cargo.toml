@@ -51,6 +51,7 @@ example-generated = ["typed-uuid"]
 dangerous-construction = ["typed-uuid"]
 
 json = ["postgres", "dep:serde", "dep:serde_json", "diesel/serde_json"]
+ctid = ["postgres", "diesel/i-implement-a-third-party-backend-and-opt-into-breaking-changes"]
 
 [lints]
 workspace = true

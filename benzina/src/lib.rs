@@ -1,5 +1,7 @@
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
+#[cfg(feature = "ctid")]
+pub use self::ctid::{Ctid, ctid};
 #[cfg(feature = "postgres")]
 pub use self::int::{U15, U31, U63};
 #[cfg(feature = "json")]
@@ -13,6 +15,8 @@ pub use benzina_derive::{Enum, join};
 
 #[doc(hidden)]
 pub mod __private;
+#[cfg(feature = "ctid")]
+mod ctid;
 #[cfg(feature = "postgres")]
 pub mod error;
 #[cfg(feature = "example-generated")]

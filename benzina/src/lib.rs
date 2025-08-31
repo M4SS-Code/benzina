@@ -25,6 +25,8 @@ mod int;
 mod json;
 #[cfg(all(feature = "serde", feature = "postgres"))]
 mod serde;
+#[cfg(feature = "postgres")]
+pub mod sql_types;
 #[cfg(feature = "typed-uuid")]
 mod typed_uuid;
 #[cfg(all(feature = "utoipa", feature = "postgres"))]

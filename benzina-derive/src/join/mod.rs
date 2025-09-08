@@ -177,6 +177,7 @@ impl Transformation {
             output_type,
             entries,
         } = self;
+        let is_result = self.is_result();
 
         let entries = entries.iter().enumerate().map(|(i, (name, entry))| {
             let item = Ident::new("item", Span::call_site());
@@ -187,20 +188,44 @@ impl Transformation {
                 #name: #entry
             }
         });
-        let iterator = quote! {
-            ::benzina::__private::std::iter::Iterator::map(
-                ::benzina::__private::IndexMap::into_values(#accumulator),
+        let map_closure = if is_result {
+            quote! {
+                |item| ::benzina::__private::std::result::Result::Ok::<
+                    #output_type,
+                    ::benzina::__private::diesel::result::Error
+                >(#output_type {
+                    #(#entries),*
+                })
+            }
+        } else {
+            quote! {
                 |item| #output_type {
                     #(#entries),*
                 }
+            }
+        };
+        let iterator = quote! {
+            ::benzina::__private::std::iter::Iterator::map(
+                ::benzina::__private::IndexMap::into_values(#accumulator),
+                #map_closure
             )
         };
         match quantity {
             Quantity::MaybeOne => {
-                quote! {
-                    ::benzina::__private::std::iter::Iterator::next(
-                        &mut #iterator
-                    )
+                if is_result {
+                    quote! {
+                        ::benzina::__private::std::option::Option::transpose(
+                            ::benzina::__private::std::iter::Iterator::next(
+                                &mut #iterator
+                            )
+                        )?
+                    }
+                } else {
+                    quote! {
+                        ::benzina::__private::std::iter::Iterator::next(
+                            &mut #iterator
+                        )
+                    }
                 }
             }
             Quantity::One | Quantity::AssumeOne => {
@@ -216,12 +241,37 @@ impl Transformation {
                 }
             }
             Quantity::AtLeastZero | Quantity::AtLeastOne => {
-                quote! {
-                    ::benzina::__private::std::iter::Iterator::collect::<::benzina::__private::std::vec::Vec<_>>(
-                        #iterator
-                    )
+                if is_result {
+                    quote! {
+                        ::benzina::__private::std::iter::Iterator::collect::<
+                            ::benzina::__private::std::result::Result<
+                                ::benzina::__private::std::vec::Vec<_>,
+                                ::benzina::__private::diesel::result::Error,
+                            >
+                        >(
+                            #iterator
+                        )?
+                    }
+                } else {
+                    quote! {
+                        ::benzina::__private::std::iter::Iterator::collect::<
+                            ::benzina::__private::std::vec::Vec<_>
+                        >(
+                            #iterator
+                        )
+                    }
                 }
             }
+        }
+    }
+
+    fn is_result(&self) -> bool {
+        match self.quantity {
+            Quantity::AtLeastZero | Quantity::AtLeastOne => true,
+            _ => self.entries.iter().any(|(_, entry)| match entry {
+                NestedOrNot::Nested(nested) => nested.is_result(),
+                NestedOrNot::Not(_) => false,
+            }),
         }
     }
 }

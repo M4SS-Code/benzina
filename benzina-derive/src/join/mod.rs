@@ -208,8 +208,8 @@ impl Transformation {
                     match ::benzina::__private::std::iter::Iterator::next(
                         &mut #iterator
                     ) {
-                        Some(item) => item,
-                        None => return ::benzina::__private::std::result::Result::Err(
+                        ::benzina::__private::std::option::Option::Some(item) => item,
+                        ::benzina::__private::std::option::Option::None => return ::benzina::__private::std::result::Result::Err(
                             ::benzina::__private::diesel::result::Error::NotFound
                         )
                     }

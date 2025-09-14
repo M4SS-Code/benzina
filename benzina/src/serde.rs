@@ -1,6 +1,6 @@
 use std::fmt;
 
-use serde::{
+use serde_core::{
     Deserialize, Deserializer, Serialize, Serializer,
     de::{self, Unexpected, Visitor},
 };

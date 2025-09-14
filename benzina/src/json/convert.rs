@@ -4,7 +4,7 @@ use diesel::{
     pg::{Pg, PgValue},
     serialize::IsNull,
 };
-use serde::{Serialize, de::DeserializeOwned};
+use serde_core::{Serialize, de::DeserializeOwned};
 
 /// Allows using [`deserialize_as`] for benzina [`Json`] and [`Jsonb`] structs.
 ///

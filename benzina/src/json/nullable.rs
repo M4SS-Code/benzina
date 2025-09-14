@@ -7,7 +7,7 @@ use diesel::{
     serialize::{IsNull, ToSql},
     sql_types::Nullable,
 };
-use serde::{Serialize, de::DeserializeOwned};
+use serde_core::{Serialize, de::DeserializeOwned};
 
 macro_rules! impl_nullable {
     (

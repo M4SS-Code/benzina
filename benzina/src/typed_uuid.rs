@@ -398,15 +398,15 @@ macro_rules! __typed_uuid__impl_dangerous_construction {
 #[cfg(feature = "serde")]
 macro_rules! __typed_uuid__impl_serde {
     ($name:ident) => {
-        impl $crate::__private::serde::Serialize for $name {
+        impl $crate::__private::serde_core::Serialize for $name {
             fn serialize<S>(
                 &self,
                 serializer: S,
             ) -> $crate::__private::std::result::Result<S::Ok, S::Error>
             where
-                S: $crate::__private::serde::Serializer,
+                S: $crate::__private::serde_core::Serializer,
             {
-                $crate::__private::serde::Serialize::serialize(&self.0, serializer)
+                $crate::__private::serde_core::Serialize::serialize(&self.0, serializer)
             }
         }
     };

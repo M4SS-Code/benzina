@@ -3,7 +3,7 @@ pub use ::diesel;
 #[cfg(feature = "derive")]
 pub use ::indexmap;
 #[cfg(feature = "serde")]
-pub use ::serde;
+pub use ::serde_core;
 pub use ::std;
 #[cfg(feature = "typed-uuid")]
 pub use ::uuid;

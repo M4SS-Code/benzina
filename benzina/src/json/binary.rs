@@ -7,7 +7,7 @@ use diesel::{
     serialize::ToSql,
     sql_types,
 };
-use serde::{Serialize, de::DeserializeOwned};
+use serde_core::{Serialize, de::DeserializeOwned};
 
 use crate::json::convert::{sql_deserialize_binary, sql_serialize_binary};
 

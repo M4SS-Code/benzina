@@ -4,6 +4,8 @@ use proc_macro2::{Span, TokenStream};
 use quote::{ToTokens, quote};
 use syn::{Ident, Index, Token, punctuated::Punctuated};
 
+use crate::join::utils::tuple_from_tokenizables;
+
 use self::{
     quantity::Quantity,
     utils::{Identifiable, NewIndexMap},
@@ -140,7 +142,7 @@ impl Transformation {
             quote! {}
         };
 
-        let or_insert = self.or_insert(&tuple_index_overwrites);
+        let or_insert_tokens = tuple_from_tokenizables(self.or_insert(&tuple_index_overwrites));
         let accumulator = self
             .entries
             .iter()
@@ -157,7 +159,7 @@ impl Transformation {
             #wrapper {
                 let mut accumulator = ::benzina::__private::indexmap::map::Entry::or_insert(
                     ::benzina::__private::IndexMap::entry(&mut #accumulator_index, #id),
-                    (#(#or_insert),*)
+                    #or_insert_tokens
                 );
                 #(#accumulator)*
             }

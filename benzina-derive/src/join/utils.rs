@@ -25,3 +25,15 @@ impl<T: ToTokens> ToTokens for Identifiable<T> {
         });
     }
 }
+
+pub(super) fn tuple_from_tokenizables<I>(tokenizables: I) -> TokenStream
+where
+    I: IntoIterator<Item: ToTokens, IntoIter: ExactSizeIterator>,
+{
+    let tokenizables = tokenizables.into_iter();
+    if tokenizables.len() == 0 {
+        quote! { () }
+    } else {
+        quote! { (#(#tokenizables),*,) }
+    }
+}

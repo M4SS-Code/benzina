@@ -190,20 +190,21 @@ impl Transformation {
                 #name: #entry
             }
         });
+        let output = quote! {
+            #output_type {
+                #(#entries),*
+            }
+        };
         let map_closure = if is_result {
             quote! {
                 |item| ::benzina::__private::std::result::Result::Ok::<
                     #output_type,
                     ::benzina::__private::diesel::result::Error
-                >(#output_type {
-                    #(#entries),*
-                })
+                >(#output)
             }
         } else {
             quote! {
-                |item| #output_type {
-                    #(#entries),*
-                }
+                |item| #output
             }
         };
         let iterator = quote! {
@@ -214,20 +215,19 @@ impl Transformation {
         };
         match quantity {
             Quantity::MaybeOne => {
+                let item = quote! {
+                    ::benzina::__private::std::iter::Iterator::next(
+                        &mut #iterator
+                    )
+                };
                 if is_result {
                     quote! {
                         ::benzina::__private::std::option::Option::transpose(
-                            ::benzina::__private::std::iter::Iterator::next(
-                                &mut #iterator
-                            )
+                            #item
                         )?
                     }
                 } else {
-                    quote! {
-                        ::benzina::__private::std::iter::Iterator::next(
-                            &mut #iterator
-                        )
-                    }
+                    item
                 }
             }
             Quantity::One | Quantity::AssumeOne => {

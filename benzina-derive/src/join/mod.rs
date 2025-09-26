@@ -195,7 +195,7 @@ impl Transformation {
                 #(#entries),*
             }
         };
-        let map_closure = if is_result {
+        let map_closure = if self.is_nested_result() {
             quote! {
                 |item| ::benzina::__private::std::result::Result::Ok::<
                     #output_type,
@@ -269,12 +269,16 @@ impl Transformation {
 
     fn is_result(&self) -> bool {
         match self.quantity {
-            Quantity::AtLeastZero | Quantity::AtLeastOne => true,
-            _ => self.entries.iter().any(|(_, entry)| match entry {
-                NestedOrNot::Nested(nested) => nested.is_result(),
-                NestedOrNot::Not(_) => false,
-            }),
+            Quantity::One | Quantity::AssumeOne => true,
+            _ => self.is_nested_result(),
         }
+    }
+
+    fn is_nested_result(&self) -> bool {
+        self.entries.iter().any(|(_, entry)| match entry {
+            NestedOrNot::Nested(nested) => nested.is_result(),
+            NestedOrNot::Not(_) => false,
+        })
     }
 }
 

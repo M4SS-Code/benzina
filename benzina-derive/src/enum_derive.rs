@@ -25,14 +25,16 @@ pub(crate) struct Enum {
     ident: Ident,
     sql_type: Type,
     rename_all: RenameRule,
-    crate_name: Option<Path>,
     variants: Vec<EnumVariant>,
+
+    crate_name: Option<Path>,
 }
 
 struct EnumVariant {
     original_name: String,
     original_name_span: Span,
     rename: Option<String>,
+
     crate_name: Option<Path>,
 }
 
@@ -123,6 +125,7 @@ impl Enum {
                     original_name: name,
                     original_name_span,
                     rename,
+
                     crate_name: crate_name.clone(),
                 })
             })
@@ -131,8 +134,9 @@ impl Enum {
             ident: input.ident,
             sql_type,
             rename_all,
-            crate_name,
             variants,
+
+            crate_name,
         })
     }
 }
@@ -143,8 +147,9 @@ impl ToTokens for Enum {
             ident,
             sql_type,
             rename_all,
-            crate_name,
             variants,
+
+            crate_name,
         } = &self;
         let crate_name = crate::crate_name(crate_name);
 
@@ -251,6 +256,7 @@ impl EnumVariant {
                         original_name,
                         original_name_span,
                         rename,
+
                         crate_name,
                     },
                     rename_rule,
@@ -282,6 +288,7 @@ impl EnumVariant {
                         original_name,
                         original_name_span,
                         rename,
+
                         crate_name: _,
                     },
                     rename_rule,

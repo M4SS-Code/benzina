@@ -31,9 +31,9 @@ pub(crate) struct Enum {
 
 struct EnumVariant {
     original_name: String,
+    original_name_span: Span,
     rename: Option<String>,
     crate_name: Option<Path>,
-    span: Span,
 }
 
 impl Enum {
@@ -118,12 +118,12 @@ impl Enum {
                     })?;
                 }
 
-                let span = variant.span();
+                let original_name_span = variant.span();
                 Ok(EnumVariant {
                     original_name: name,
+                    original_name_span,
                     rename,
                     crate_name: crate_name.clone(),
-                    span,
                 })
             })
             .collect::<Result<Vec<_>, syn::Error>>()?;
@@ -249,9 +249,9 @@ impl EnumVariant {
                 let Self(
                     EnumVariant {
                         original_name,
+                        original_name_span,
                         rename,
                         crate_name,
-                        span,
                     },
                     rename_rule,
                 ) = self;
@@ -261,8 +261,8 @@ impl EnumVariant {
                     .clone()
                     .unwrap_or_else(|| rename_rule.format(original_name));
 
-                let original_name_ident = Ident::new(original_name, *span);
-                let rename_bytes = LitByteStr::new(rename.as_bytes(), *span);
+                let original_name_ident = Ident::new(original_name, *original_name_span);
+                let rename_bytes = LitByteStr::new(rename.as_bytes(), *original_name_span);
                 tokens.append_all(quote! {
                     #rename_bytes => #crate_name::__private::std::option::Option::Some(Self::#original_name_ident),
                 });
@@ -280,9 +280,9 @@ impl EnumVariant {
                 let Self(
                     EnumVariant {
                         original_name,
+                        original_name_span,
                         rename,
                         crate_name: _,
-                        span,
                     },
                     rename_rule,
                 ) = self;
@@ -291,7 +291,7 @@ impl EnumVariant {
                     .clone()
                     .unwrap_or_else(|| rename_rule.format(original_name));
 
-                let original_name_ident = Ident::new(original_name, *span);
+                let original_name_ident = Ident::new(original_name, *original_name_span);
                 tokens.append_all(quote! {
                     Self::#original_name_ident => #rename,
                 });

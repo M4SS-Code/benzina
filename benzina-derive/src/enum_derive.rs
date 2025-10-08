@@ -34,11 +34,20 @@ struct EnumVariant {
     original_name: String,
     original_name_span: Span,
     rename: Option<String>,
+    #[cfg(all(feature = "postgres", feature = "json"))]
+    payload: Option<EnumVariantPayload>,
 
     crate_name: Option<Path>,
 }
 
+#[cfg(all(feature = "postgres", feature = "json"))]
+struct EnumVariantPayload {
+    type_: Type,
+    span: Span,
+}
+
 impl Enum {
+    #[expect(clippy::too_many_lines)]
     pub(crate) fn parse(input: DeriveInput) -> Result<Self, syn::Error> {
         let Data::Enum(e) = input.data else {
             fail!(input, "`benzina::Enum` macro available only for enums");
@@ -97,9 +106,29 @@ impl Enum {
             .variants
             .into_iter()
             .map(|variant| {
-                if !matches!(variant.fields, Fields::Unit) {
-                    fail!(variant, "only unit variants are supported");
-                }
+                let payload = match &variant.fields {
+                    Fields::Unit => None,
+                    #[cfg(all(feature = "postgres", feature = "json"))]
+                    Fields::Unnamed(fields) => {
+                        let mut fields = fields.unnamed.iter();
+                        let (Some(field), None) = (fields.next(), fields.next()) else {
+                            fail!(variant, "only single-item variants are supported");
+                        };
+
+                        let span = field.span();
+                        Some(EnumVariantPayload {
+                            type_: field.ty.clone(),
+                            span,
+                        })
+                    }
+                    #[cfg(not(all(feature = "postgres", feature = "json")))]
+                    Fields::Unnamed(_fields) => {
+                        fail!(variant, "fields require both the `postgres` and the `json` feature to be enabled");
+                    }
+                    Fields::Named(_fields) => {
+                        fail!(variant, "only unit an unnamed variants are supported");
+                    }
+                };
 
                 let name = variant.ident.to_string();
                 let mut rename = None;
@@ -120,11 +149,18 @@ impl Enum {
                     })?;
                 }
 
+                // Suppress build breakage when building without the
+                // PostgreSQL JSON feature.
+                #[cfg(not(all(feature = "postgres", feature = "json")))]
+                let _: Option<()> = payload;
+
                 let original_name_span = variant.span();
                 Ok(EnumVariant {
                     original_name: name,
                     original_name_span,
                     rename,
+                    #[cfg(all(feature = "postgres", feature = "json"))]
+                    payload,
 
                     crate_name: crate_name.clone(),
                 })
@@ -138,6 +174,22 @@ impl Enum {
 
             crate_name,
         })
+    }
+
+    #[cfg(all(feature = "postgres", feature = "json"))]
+    fn has_json_fields(&self) -> bool {
+        self.variants
+            .iter()
+            .any(|variant| variant.payload.is_some())
+    }
+
+    #[cfg(not(all(feature = "postgres", feature = "json")))]
+    #[expect(
+        clippy::unused_self,
+        reason = "kept for compatibility with the above implementation"
+    )]
+    fn has_json_fields(&self) -> bool {
+        false
     }
 }
 
@@ -155,98 +207,142 @@ impl ToTokens for Enum {
 
         let from_bytes_arms = variants
             .iter()
-            .map(|variant| variant.gen_from_bytes(*rename_all));
+            .map(|variant| variant.gen_from_bytes(self.has_json_fields(), *rename_all));
         let to_str_arms = variants
             .iter()
-            .map(|variant| variant.gen_to_str(*rename_all));
+            .map(|variant| variant.gen_to_str(self.has_json_fields(), *rename_all));
 
-        tokens.append_all(quote! {
-            impl #ident {
-                #[doc(hidden)]
-                fn __benzina04_from_bytes(val: &[u8]) -> #crate_name::__private::std::option::Option<Self> {
-                    match val {
-                        #(#from_bytes_arms)*
-                        _ => #crate_name::__private::std::option::Option::None,
+        if !self.has_json_fields() {
+            tokens.append_all(quote! {
+                impl #ident {
+                    #[doc(hidden)]
+                    fn __benzina04_from_bytes(val: &[u8]) -> #crate_name::__private::std::option::Option<Self> {
+                        match val {
+                            #(#from_bytes_arms)*
+                            _ => #crate_name::__private::std::option::Option::None,
+                        }
+                    }
+
+                    #[doc(hidden)]
+                    fn __benzina04_as_str(&self) -> &'static str {
+                        match self {
+                            #(#to_str_arms)*
+                        }
                     }
                 }
-
-                #[doc(hidden)]
-                fn __benzina04_as_str(&self) -> &'static str {
-                    match self {
-                        #(#to_str_arms)*
-                    }
-                }
-            }
-        });
+            });
+        }
 
         #[cfg(feature = "postgres")]
-        tokens.append_all(quote! {
-            #[automatically_derived]
-            impl #crate_name::__private::diesel::deserialize::FromSql<#sql_type, #crate_name::__private::diesel::pg::Pg> for #ident {
-                fn from_sql(bytes: #crate_name::__private::diesel::pg::PgValue<'_>) -> #crate_name::__private::diesel::deserialize::Result<Self> {
-                    match Self::__benzina04_from_bytes(bytes.as_bytes()) {
-                        #crate_name::__private::std::option::Option::Some(this) => {
-                            #crate_name::__private::std::result::Result::Ok(this)
-                        },
-                        #crate_name::__private::std::option::Option::None => {
-                            #crate_name::__private::std::result::Result::Err(
-                                #crate_name::__private::std::convert::Into::into(
-                                    "Unrecognized enum variant"
-                                )
+        if self.has_json_fields() {
+            #[cfg(all(feature = "postgres", feature = "json"))]
+            {
+                tokens.append_all(quote! {
+                    #[automatically_derived]
+                    impl #crate_name::__private::diesel::deserialize::FromSql<(#sql_type, #crate_name::__private::diesel::pg::sql_types::Jsonb), #crate_name::__private::diesel::pg::Pg> for #ident {
+                        fn from_sql(bytes: #crate_name::__private::diesel::pg::PgValue<'_>) -> #crate_name::__private::diesel::deserialize::Result<Self> {
+                            match Self::__benzina04_from_bytes(bytes.as_bytes()) {
+                                #crate_name::__private::std::option::Option::Some(this) => {
+                                    #crate_name::__private::std::result::Result::Ok(this)
+                                },
+                                #crate_name::__private::std::option::Option::None => {
+                                    #crate_name::__private::std::result::Result::Err(
+                                        #crate_name::__private::std::convert::Into::into(
+                                            "Unrecognized enum variant"
+                                        )
+                                    )
+                                },
+                            }
+                        }
+                    }
+
+                    #[automatically_derived]
+                    impl #crate_name::__private::diesel::serialize::ToSql<(#sql_type, #crate_name::__private::diesel::pg::sql_types::Jsonb), #crate_name::__private::diesel::pg::Pg> for #ident {
+                        fn to_sql<'b>(&'b self, out: &mut #crate_name::__private::diesel::serialize::Output<'b, '_, #crate_name::__private::diesel::pg::Pg>) -> #crate_name::__private::diesel::serialize::Result {
+                            let sql_val = self.__benzina04_as_str();
+                            #crate_name::__private::std::io::Write::write_all(out, sql_val.as_bytes())?;
+
+                            #crate_name::__private::std::result::Result::Ok(
+                                #crate_name::__private::diesel::serialize::IsNull::No
                             )
-                        },
+                        }
+                    }
+                });
+            }
+
+            #[cfg(not(all(feature = "postgres", feature = "json")))]
+            unreachable!()
+        } else {
+            tokens.append_all(quote! {
+                #[automatically_derived]
+                impl #crate_name::__private::diesel::deserialize::FromSql<#sql_type, #crate_name::__private::diesel::pg::Pg> for #ident {
+                    fn from_sql(bytes: #crate_name::__private::diesel::pg::PgValue<'_>) -> #crate_name::__private::diesel::deserialize::Result<Self> {
+                        match Self::__benzina04_from_bytes(bytes.as_bytes()) {
+                            #crate_name::__private::std::option::Option::Some(this) => {
+                                #crate_name::__private::std::result::Result::Ok(this)
+                            },
+                            #crate_name::__private::std::option::Option::None => {
+                                #crate_name::__private::std::result::Result::Err(
+                                    #crate_name::__private::std::convert::Into::into(
+                                        "Unrecognized enum variant"
+                                    )
+                                )
+                            },
+                        }
                     }
                 }
-            }
 
-            #[automatically_derived]
-            impl #crate_name::__private::diesel::serialize::ToSql<#sql_type, #crate_name::__private::diesel::pg::Pg> for #ident {
-                fn to_sql<'b>(&'b self, out: &mut #crate_name::__private::diesel::serialize::Output<'b, '_, #crate_name::__private::diesel::pg::Pg>) -> #crate_name::__private::diesel::serialize::Result {
-                    let sql_val = self.__benzina04_as_str();
-                    #crate_name::__private::std::io::Write::write_all(out, sql_val.as_bytes())?;
+                #[automatically_derived]
+                impl #crate_name::__private::diesel::serialize::ToSql<#sql_type, #crate_name::__private::diesel::pg::Pg> for #ident {
+                    fn to_sql<'b>(&'b self, out: &mut #crate_name::__private::diesel::serialize::Output<'b, '_, #crate_name::__private::diesel::pg::Pg>) -> #crate_name::__private::diesel::serialize::Result {
+                        let sql_val = self.__benzina04_as_str();
+                        #crate_name::__private::std::io::Write::write_all(out, sql_val.as_bytes())?;
 
-                    #crate_name::__private::std::result::Result::Ok(
-                        #crate_name::__private::diesel::serialize::IsNull::No
-                    )
+                        #crate_name::__private::std::result::Result::Ok(
+                            #crate_name::__private::diesel::serialize::IsNull::No
+                        )
+                    }
                 }
-            }
-        });
+            });
+        }
 
         #[cfg(feature = "mysql")]
-        tokens.append_all(quote! {
-            #[automatically_derived]
-            impl #crate_name::__private::diesel::deserialize::FromSql<#sql_type, #crate_name::__private::diesel::mysql::Mysql> for #ident {
-                fn from_sql(bytes: #crate_name::__private::diesel::mysql::MysqlValue<'_>) -> #crate_name::__private::diesel::deserialize::Result<Self> {
-                    match Self::__benzina04_from_bytes(bytes.as_bytes()) {
-                        #crate_name::__private::std::option::Option::Some(this) => {
-                            #crate_name::__private::std::result::Result::Ok(this)
-                        },
-                        #crate_name::__private::std::option::Option::None => {
-                            #crate_name::__private::std::result::Result::Err(
-                                #crate_name::__private::std::convert::Into::into(
-                                    "Unrecognized enum variant"
+        if !self.has_json_fields() {
+            tokens.append_all(quote! {
+                #[automatically_derived]
+                impl #crate_name::"mysql"__private::diesel::deserialize::FromSql<#sql_type, #crate_name::__private::diesel::mysql::Mysql> for #ident {
+                    fn from_sql(bytes: #crate_name::__private::diesel::mysql::MysqlValue<'_>) -> #crate_name::__private::diesel::deserialize::Result<Self> {
+                        match Self::__benzina04_from_bytes(bytes.as_bytes()) {
+                            #crate_name::__private::std::option::Option::Some(this) => {
+                                #crate_name::__private::std::result::Result::Ok(this)
+                            },
+                            #crate_name::__private::std::option::Option::None => {
+                                #crate_name::__private::std::result::Result::Err(
+                                    #crate_name::__private::std::convert::Into::into(
+                                        "Unrecognized enum variant"
+                                    )
                                 )
-                            )
-                        },
+                            },
+                        }
                     }
                 }
-            }
 
-            #[automatically_derived]
-            impl #crate_name::__private::diesel::serialize::ToSql<#sql_type, #crate_name::__private::diesel::mysql::Mysql> for #ident {
-                fn to_sql<'b>(&'b self, out: &mut #crate_name::__private::diesel::serialize::Output<'b, '_, #crate_name::__private::diesel::mysql::Mysql>) -> #crate_name::__private::diesel::serialize::Result {
-                    let sql_val = self.__benzina04_as_str();
-                    #crate_name::__private::std::io::Write::write_all(out, sql_val.as_bytes())?;
+                #[automatically_derived]
+                impl #crate_name::__private::diesel::serialize::ToSql<#sql_type, #crate_name::__private::diesel::mysql::Mysql> for #ident {
+                    fn to_sql<'b>(&'b self, out: &mut #crate_name::__private::diesel::serialize::Output<'b, '_, #crate_name::__private::diesel::mysql::Mysql>) -> #crate_name::__private::diesel::serialize::Result {
+                        let sql_val = self.__benzina04_as_str();
+                        #crate_name::__private::std::io::Write::write_all(out, sql_val.as_bytes())?;
 
-                    #crate_name::__private::std::result::Result::Ok(#crate_name::__private::diesel::serialize::IsNull::No)
+                        #crate_name::__private::std::result::Result::Ok(#crate_name::__private::diesel::serialize::IsNull::No)
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 }
 
 impl EnumVariant {
-    fn gen_from_bytes(&self, rename_rule: RenameRule) -> impl ToTokens + use<'_> {
+    fn gen_from_bytes(&self, has_fields: bool, rename_rule: RenameRule) -> impl ToTokens + use<'_> {
         struct EnumVariantFromBytes<'a>(&'a EnumVariant, RenameRule);
 
         impl ToTokens for EnumVariantFromBytes<'_> {
@@ -256,6 +352,8 @@ impl EnumVariant {
                         original_name,
                         original_name_span,
                         rename,
+                        #[cfg(all(feature = "postgres", feature = "json"))]
+                        payload,
 
                         crate_name,
                     },
@@ -278,7 +376,7 @@ impl EnumVariant {
         EnumVariantFromBytes(self, rename_rule)
     }
 
-    fn gen_to_str(&self, rename_rule: RenameRule) -> impl ToTokens + use<'_> {
+    fn gen_to_str(&self, has_fields: bool, rename_rule: RenameRule) -> impl ToTokens + use<'_> {
         struct EnumVariantToStr<'a>(&'a EnumVariant, RenameRule);
 
         impl ToTokens for EnumVariantToStr<'_> {
@@ -288,6 +386,8 @@ impl EnumVariant {
                         original_name,
                         original_name_span,
                         rename,
+                        #[cfg(all(feature = "postgres", feature = "json"))]
+                        payload,
 
                         crate_name: _,
                     },

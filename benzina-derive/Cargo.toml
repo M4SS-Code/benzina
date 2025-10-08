@@ -27,6 +27,7 @@ diesel = { version = "2", default-features = false, features = ["postgres", "mys
 [features]
 postgres = []
 mysql = []
+json = []
 
 [lints]
 workspace = true

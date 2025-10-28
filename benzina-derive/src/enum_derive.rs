@@ -153,6 +153,44 @@ impl ToTokens for Enum {
         } = &self;
         let crate_name = crate::crate_name(crate_name);
 
+        tokens.append_all(quote! {
+            #[automatically_derived]
+            impl #crate_name::__private::diesel::expression::AsExpression<#sql_type> for #ident {
+                type Expression = #crate_name::__private::diesel::internal::derives::as_expression::Bound<
+                    #sql_type,
+                    Self,
+                >;
+
+                fn as_expression(self) -> Self::Expression {
+                    #crate_name::__private::diesel::internal::derives::as_expression::Bound::new(self)
+                }
+            }
+
+            #[automatically_derived]
+            impl<'__expr> #crate_name::__private::diesel::expression::AsExpression<#sql_type> for &'__expr #ident {
+                type Expression = #crate_name::__private::diesel::internal::derives::as_expression::Bound<
+                    #sql_type,
+                    Self,
+                >;
+
+                fn as_expression(self) -> Self::Expression {
+                    #crate_name::__private::diesel::internal::derives::as_expression::Bound::new(self)
+                }
+            }
+
+            #[automatically_derived]
+            impl<'__expr, '__expr2> #crate_name::__private::diesel::expression::AsExpression<#sql_type> for &'__expr2 &'__expr #ident {
+                type Expression = #crate_name::__private::diesel::internal::derives::as_expression::Bound<
+                    #sql_type,
+                    Self,
+                >;
+
+                fn as_expression(self) -> Self::Expression {
+                    #crate_name::__private::diesel::internal::derives::as_expression::Bound::new(self)
+                }
+            }
+        });
+
         let from_bytes_arms = variants
             .iter()
             .map(|variant| variant.gen_from_bytes(*rename_all))
@@ -164,6 +202,15 @@ impl ToTokens for Enum {
 
         #[cfg(feature = "postgres")]
         tokens.append_all(quote! {
+            #[automatically_derived]
+            impl #crate_name::__private::diesel::deserialize::Queryable<#sql_type, #crate_name::__private::diesel::pg::Pg> for #ident {
+                type Row = Self;
+
+                fn build(row: Self::Row) -> #crate_name::__private::diesel::deserialize::Result<Self> {
+                    #crate_name::__private::std::result::Result::Ok(row)
+                }
+            }
+
             #[automatically_derived]
             impl #crate_name::__private::diesel::deserialize::FromSql<#sql_type, #crate_name::__private::diesel::pg::Pg> for #ident {
                 fn from_sql(bytes: #crate_name::__private::diesel::pg::PgValue<'_>) -> #crate_name::__private::diesel::deserialize::Result<Self> {
@@ -197,6 +244,15 @@ impl ToTokens for Enum {
 
         #[cfg(feature = "mysql")]
         tokens.append_all(quote! {
+            #[automatically_derived]
+            impl #crate_name::__private::diesel::deserialize::Queryable<#sql_type, #crate_name::__private::diesel::mysql::Mysql> for #ident {
+                type Row = Self;
+
+                fn build(row: Self::Row) -> #crate_name::__private::diesel::deserialize::Result<Self> {
+                    #crate_name::__private::std::result::Result::Ok(row)
+                }
+            }
+
             #[automatically_derived]
             impl #crate_name::__private::diesel::deserialize::FromSql<#sql_type, #crate_name::__private::diesel::mysql::Mysql> for #ident {
                 fn from_sql(bytes: #crate_name::__private::diesel::mysql::MysqlValue<'_>) -> #crate_name::__private::diesel::deserialize::Result<Self> {

@@ -35,13 +35,7 @@ mod rename_rule;
 /// # use benzina_derive as benzina;
 /// # fn main() {}
 ///
-/// use diesel::{
-///     deserialize::FromSqlRow,
-///     expression::AsExpression,
-/// };
-///
-/// #[derive(Debug, Copy, Clone, AsExpression, FromSqlRow, benzina::Enum)]
-/// #[diesel(sql_type = crate::schema::sql_types::Animal)]
+/// #[derive(Debug, Copy, Clone, benzina::Enum)]
 /// #[benzina(
 ///     sql_type = crate::schema::sql_types::Animal,
 ///     rename_all = "snake_case"

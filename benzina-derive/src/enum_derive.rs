@@ -246,65 +246,43 @@ impl ToTokens for Enum {
 }
 
 impl EnumVariant {
-    fn gen_from_bytes(&self, rename_rule: RenameRule) -> impl ToTokens + use<'_> {
-        struct EnumVariantFromBytes<'a>(&'a EnumVariant, RenameRule);
+    fn gen_from_bytes(&self, rename_rule: RenameRule) -> impl ToTokens {
+        let Self {
+            original_name,
+            original_name_span,
+            rename,
 
-        impl ToTokens for EnumVariantFromBytes<'_> {
-            fn to_tokens(&self, tokens: &mut TokenStream) {
-                let Self(
-                    EnumVariant {
-                        original_name,
-                        original_name_span,
-                        rename,
+            crate_name,
+        } = self;
+        let crate_name = crate::crate_name(crate_name);
 
-                        crate_name,
-                    },
-                    rename_rule,
-                ) = self;
-                let crate_name = crate::crate_name(crate_name);
+        let rename = rename
+            .clone()
+            .unwrap_or_else(|| rename_rule.format(original_name));
 
-                let rename = rename
-                    .clone()
-                    .unwrap_or_else(|| rename_rule.format(original_name));
-
-                let original_name_ident = Ident::new(original_name, *original_name_span);
-                let rename_bytes = LitByteStr::new(rename.as_bytes(), *original_name_span);
-                tokens.append_all(quote! {
-                    #rename_bytes => #crate_name::__private::std::option::Option::Some(Self::#original_name_ident),
-                });
-            }
+        let original_name_ident = Ident::new(original_name, *original_name_span);
+        let rename_bytes = LitByteStr::new(rename.as_bytes(), *original_name_span);
+        quote! {
+            #rename_bytes => #crate_name::__private::std::option::Option::Some(Self::#original_name_ident),
         }
-
-        EnumVariantFromBytes(self, rename_rule)
     }
 
-    fn gen_to_str(&self, rename_rule: RenameRule) -> impl ToTokens + use<'_> {
-        struct EnumVariantToStr<'a>(&'a EnumVariant, RenameRule);
+    fn gen_to_str(&self, rename_rule: RenameRule) -> impl ToTokens {
+        let Self {
+            original_name,
+            original_name_span,
+            rename,
 
-        impl ToTokens for EnumVariantToStr<'_> {
-            fn to_tokens(&self, tokens: &mut TokenStream) {
-                let Self(
-                    EnumVariant {
-                        original_name,
-                        original_name_span,
-                        rename,
+            crate_name: _,
+        } = self;
 
-                        crate_name: _,
-                    },
-                    rename_rule,
-                ) = self;
+        let rename = rename
+            .clone()
+            .unwrap_or_else(|| rename_rule.format(original_name));
 
-                let rename = rename
-                    .clone()
-                    .unwrap_or_else(|| rename_rule.format(original_name));
-
-                let original_name_ident = Ident::new(original_name, *original_name_span);
-                tokens.append_all(quote! {
-                    Self::#original_name_ident => #rename,
-                });
-            }
+        let original_name_ident = Ident::new(original_name, *original_name_span);
+        quote! {
+            Self::#original_name_ident => #rename,
         }
-
-        EnumVariantToStr(self, rename_rule)
     }
 }

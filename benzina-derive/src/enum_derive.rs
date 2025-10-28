@@ -155,40 +155,21 @@ impl ToTokens for Enum {
 
         let from_bytes_arms = variants
             .iter()
-            .map(|variant| variant.gen_from_bytes(*rename_all));
-        let to_str_arms = variants
+            .map(|variant| variant.gen_from_bytes(*rename_all))
+            .collect::<Vec<_>>();
+        let to_byte_str_arms = variants
             .iter()
-            .map(|variant| variant.gen_to_str(*rename_all));
-
-        tokens.append_all(quote! {
-            impl #ident {
-                #[doc(hidden)]
-                fn __benzina04_from_bytes(val: &[u8]) -> #crate_name::__private::std::option::Option<Self> {
-                    match val {
-                        #(#from_bytes_arms)*
-                        _ => #crate_name::__private::std::option::Option::None,
-                    }
-                }
-
-                #[doc(hidden)]
-                fn __benzina04_as_str(&self) -> &'static str {
-                    match self {
-                        #(#to_str_arms)*
-                    }
-                }
-            }
-        });
+            .map(|variant| variant.gen_to_byte_str(*rename_all))
+            .collect::<Vec<_>>();
 
         #[cfg(feature = "postgres")]
         tokens.append_all(quote! {
             #[automatically_derived]
             impl #crate_name::__private::diesel::deserialize::FromSql<#sql_type, #crate_name::__private::diesel::pg::Pg> for #ident {
                 fn from_sql(bytes: #crate_name::__private::diesel::pg::PgValue<'_>) -> #crate_name::__private::diesel::deserialize::Result<Self> {
-                    match Self::__benzina04_from_bytes(bytes.as_bytes()) {
-                        #crate_name::__private::std::option::Option::Some(this) => {
-                            #crate_name::__private::std::result::Result::Ok(this)
-                        },
-                        #crate_name::__private::std::option::Option::None => {
+                    match bytes.as_bytes() {
+                        #(#from_bytes_arms)*
+                        _ => {
                             #crate_name::__private::std::result::Result::Err(
                                 #crate_name::__private::std::convert::Into::into(
                                     "Unrecognized enum variant"
@@ -202,8 +183,10 @@ impl ToTokens for Enum {
             #[automatically_derived]
             impl #crate_name::__private::diesel::serialize::ToSql<#sql_type, #crate_name::__private::diesel::pg::Pg> for #ident {
                 fn to_sql<'b>(&'b self, out: &mut #crate_name::__private::diesel::serialize::Output<'b, '_, #crate_name::__private::diesel::pg::Pg>) -> #crate_name::__private::diesel::serialize::Result {
-                    let sql_val = self.__benzina04_as_str();
-                    #crate_name::__private::std::io::Write::write_all(out, sql_val.as_bytes())?;
+                    let s = match self {
+                        #(#to_byte_str_arms)*
+                    };
+                    #crate_name::__private::std::io::Write::write_all(out, s)?;
 
                     #crate_name::__private::std::result::Result::Ok(
                         #crate_name::__private::diesel::serialize::IsNull::No
@@ -217,11 +200,9 @@ impl ToTokens for Enum {
             #[automatically_derived]
             impl #crate_name::__private::diesel::deserialize::FromSql<#sql_type, #crate_name::__private::diesel::mysql::Mysql> for #ident {
                 fn from_sql(bytes: #crate_name::__private::diesel::mysql::MysqlValue<'_>) -> #crate_name::__private::diesel::deserialize::Result<Self> {
-                    match Self::__benzina04_from_bytes(bytes.as_bytes()) {
-                        #crate_name::__private::std::option::Option::Some(this) => {
-                            #crate_name::__private::std::result::Result::Ok(this)
-                        },
-                        #crate_name::__private::std::option::Option::None => {
+                    match bytes.as_bytes() {
+                        #(#from_bytes_arms)*
+                        _ => {
                             #crate_name::__private::std::result::Result::Err(
                                 #crate_name::__private::std::convert::Into::into(
                                     "Unrecognized enum variant"
@@ -235,8 +216,10 @@ impl ToTokens for Enum {
             #[automatically_derived]
             impl #crate_name::__private::diesel::serialize::ToSql<#sql_type, #crate_name::__private::diesel::mysql::Mysql> for #ident {
                 fn to_sql<'b>(&'b self, out: &mut #crate_name::__private::diesel::serialize::Output<'b, '_, #crate_name::__private::diesel::mysql::Mysql>) -> #crate_name::__private::diesel::serialize::Result {
-                    let sql_val = self.__benzina04_as_str();
-                    #crate_name::__private::std::io::Write::write_all(out, sql_val.as_bytes())?;
+                    let s = match self {
+                        #(#to_byte_str_arms)*
+                    };
+                    #crate_name::__private::std::io::Write::write_all(out, s)?;
 
                     #crate_name::__private::std::result::Result::Ok(#crate_name::__private::diesel::serialize::IsNull::No)
                 }
@@ -263,11 +246,11 @@ impl EnumVariant {
         let original_name_ident = Ident::new(original_name, *original_name_span);
         let rename_bytes = LitByteStr::new(rename.as_bytes(), *original_name_span);
         quote! {
-            #rename_bytes => #crate_name::__private::std::option::Option::Some(Self::#original_name_ident),
+            #rename_bytes => #crate_name::__private::std::result::Result::Ok(Self::#original_name_ident),
         }
     }
 
-    fn gen_to_str(&self, rename_rule: RenameRule) -> impl ToTokens {
+    fn gen_to_byte_str(&self, rename_rule: RenameRule) -> impl ToTokens {
         let Self {
             original_name,
             original_name_span,
@@ -281,8 +264,9 @@ impl EnumVariant {
             .unwrap_or_else(|| rename_rule.format(original_name));
 
         let original_name_ident = Ident::new(original_name, *original_name_span);
+        let rename_bytes = LitByteStr::new(rename.as_bytes(), *original_name_span);
         quote! {
-            Self::#original_name_ident => #rename,
+            Self::#original_name_ident => #rename_bytes,
         }
     }
 }

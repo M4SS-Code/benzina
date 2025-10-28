@@ -164,6 +164,14 @@ impl ToTokens for Enum {
 
         #[cfg(feature = "postgres")]
         tokens.append_all(quote! {
+            impl diesel::deserialize::Queryable<#sql_type, #crate_name::__private::diesel::pg::Pg> for #ident {
+                type Row = Self;
+
+                fn build(row: Self) -> #crate_name::__private::diesel::deserialize::Result<Self> {
+                    #crate_name::__private::std::result::Result::Ok(row)
+                }
+            }
+
             #[automatically_derived]
             impl #crate_name::__private::diesel::deserialize::FromSql<#sql_type, #crate_name::__private::diesel::pg::Pg> for #ident {
                 fn from_sql(bytes: #crate_name::__private::diesel::pg::PgValue<'_>) -> #crate_name::__private::diesel::deserialize::Result<Self> {

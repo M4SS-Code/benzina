@@ -279,7 +279,7 @@ impl ToTokens for Enum {
             #[automatically_derived]
             impl #crate_name::__private::diesel::serialize::ToSql<#sql_type, #crate_name::__private::diesel::pg::Pg> for #impls_ident {
                 fn to_sql<'b>(&'b self, out: &mut #crate_name::__private::diesel::serialize::Output<'b, '_, #crate_name::__private::diesel::pg::Pg>) -> #crate_name::__private::diesel::serialize::Result {
-                    let s = match self {
+                    let s: &[u8] = match self {
                         #(#to_byte_str_arms)*
                     };
                     #crate_name::__private::std::io::Write::write_all(out, s)?;
@@ -315,7 +315,16 @@ impl ToTokens for Enum {
         let mysql = if !self.has_json_fields() {
             quote! {
                 #[automatically_derived]
-                impl #crate_name::"mysql"__private::diesel::deserialize::FromSql<#sql_type, #crate_name::__private::diesel::mysql::Mysql> for #ident {
+                impl #crate_name::__private::diesel::deserialize::Queryable<#queryable_sql_type, #crate_name::__private::diesel::mysql::Mysql> for #ident {
+                    type Row = #queryable_row_type;
+
+                    fn build(row: Self::Row) -> #crate_name::__private::diesel::deserialize::Result<Self> {
+                        #queryable_impl
+                    }
+                }
+
+                #[automatically_derived]
+                impl #crate_name::__private::diesel::deserialize::FromSql<#sql_type, #crate_name::__private::diesel::mysql::Mysql> for #impls_ident {
                     fn from_sql(bytes: #crate_name::__private::diesel::mysql::MysqlValue<'_>) -> #crate_name::__private::diesel::deserialize::Result<Self> {
                         match bytes.as_bytes() {
                             #(#from_bytes_arms)*
@@ -331,9 +340,9 @@ impl ToTokens for Enum {
                 }
 
                 #[automatically_derived]
-                impl #crate_name::__private::diesel::serialize::ToSql<#sql_type, #crate_name::__private::diesel::mysql::Mysql> for #ident {
+                impl #crate_name::__private::diesel::serialize::ToSql<#sql_type, #crate_name::__private::diesel::mysql::Mysql> for #impls_ident {
                     fn to_sql<'b>(&'b self, out: &mut #crate_name::__private::diesel::serialize::Output<'b, '_, #crate_name::__private::diesel::mysql::Mysql>) -> #crate_name::__private::diesel::serialize::Result {
-                        let s = match self {
+                        let s: &[u8] = match self {
                             #(#to_byte_str_arms)*
                         };
                         #crate_name::__private::std::io::Write::write_all(out, s)?;

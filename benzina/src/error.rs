@@ -38,3 +38,20 @@ impl Error for ParseIntError {
         }
     }
 }
+
+#[derive(Debug, Clone)]
+pub enum InvalidArray {
+    UnexpectedLength,
+    UnexpectedNullValue,
+}
+
+impl Display for InvalidArray {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Self::UnexpectedLength => "mismatched array length",
+            Self::UnexpectedNullValue => "the array contains an unexpected null value",
+        })
+    }
+}
+
+impl Error for InvalidArray {}

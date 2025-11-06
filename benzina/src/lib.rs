@@ -1,5 +1,7 @@
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
+#[cfg(feature = "array")]
+pub use self::array::{Array, ArrayWithNullableItems};
 #[cfg(feature = "ctid")]
 pub use self::ctid::{Ctid, ctid};
 #[cfg(feature = "postgres")]
@@ -15,6 +17,8 @@ pub use benzina_derive::{Enum, join};
 
 #[doc(hidden)]
 pub mod __private;
+#[cfg(feature = "array")]
+mod array;
 #[cfg(feature = "ctid")]
 mod ctid;
 #[cfg(feature = "postgres")]

@@ -75,8 +75,8 @@ pub(crate) mod nullable;
 /// [`FromSql`]: diesel::deserialize::FromSql
 /// [`ToSql`]: diesel::serialize::ToSql
 /// [`serde_json::Value`]: serde_json::Value
-/// [`Serialize`]: serde::Serialize
-/// [`Deserialize`]: serde::Deserialize
+/// [`Serialize`]: serde_core::Serialize
+/// [`Deserialize`]: serde_core::Deserialize
 /// [`serialize_as`]: diesel::prelude::Insertable#optional-field-attributes
 /// [`deserialize_as`]: diesel::prelude::Queryable#deserialize_as-attribute
 /// [`json_deserialize_as`]: crate::json_deserialize_as

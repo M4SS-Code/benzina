@@ -67,8 +67,8 @@ macro_rules! impl_nullable {
             #[doc = "[`FromSql`]: diesel::deserialize::FromSql"]
             #[doc = "[`ToSql`]: diesel::serialize::ToSql"]
             #[doc = "[`serde_json::Value`]: serde_json::Value"]
-            #[doc = "[`Serialize`]: serde::Serialize"]
-            #[doc = "[`Deserialize`]: serde::Deserialize"]
+            #[doc = "[`Serialize`]: serde_core::Serialize"]
+            #[doc = "[`Deserialize`]: serde_core::Deserialize"]
             #[doc = "[`serialize_as`]: diesel::prelude::Insertable#optional-field-attributes"]
             #[doc = "[`deserialize_as`]: diesel::prelude::Queryable#deserialize_as-attribute"]
             #[derive(

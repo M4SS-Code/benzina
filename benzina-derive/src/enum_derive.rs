@@ -291,7 +291,7 @@ impl ToTokens for Enum {
             }
         };
         #[cfg(not(feature = "postgres"))]
-        let postgres = None::<TokenStream>;
+        let postgres = quote! {};
 
         let postgres_extra = if self.has_json_fields() {
             let entries = self.variants.iter().map(|variant| {
@@ -301,18 +301,47 @@ impl ToTokens for Enum {
                 }
             });
 
+            let impls_enum = Self {
+                ident: impls_ident.clone(),
+                sql_type: self.sql_type.clone(),
+                rename_all: self.rename_all,
+                variants: self
+                    .variants
+                    .iter()
+                    .map(
+                        |EnumVariant {
+                             original_name,
+                             original_name_span,
+                             rename,
+                             payload,
+                             crate_name,
+                         }| EnumVariant {
+                            original_name: original_name.clone(),
+                            original_name_span: *original_name_span,
+                            rename: rename.clone(),
+                            payload: None,
+                            crate_name: crate_name.clone(),
+                        },
+                    )
+                    .collect(),
+                crate_name: self.crate_name.clone(),
+            };
             quote! {
-                #[derive(Debug)]
-                struct #impls_ident {
+                #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+                pub struct #impls_ident {
                     #(#entries)*
                 }
+
+                #impls_enum
             }
         } else {
             quote! {}
         };
 
         #[cfg(feature = "mysql")]
-        let mysql = if !self.has_json_fields() {
+        let mysql = if self.has_json_fields() {
+            unreachable!()
+        } else {
             quote! {
                 #[automatically_derived]
                 impl #crate_name::__private::diesel::deserialize::Queryable<#queryable_sql_type, #crate_name::__private::diesel::mysql::Mysql> for #ident {
@@ -351,18 +380,14 @@ impl ToTokens for Enum {
                     }
                 }
             }
-        } else {
-            unimplemented!()
         };
         #[cfg(not(feature = "mysql"))]
-        let mysql = None::<TokenStream>;
+        let mysql = quote! {};
 
         tokens.append_all(quote! {
-            const _: () = {
-                #postgres
-                #postgres_extra
-                #mysql
-            };
+            #postgres
+            #postgres_extra
+            #mysql
         });
     }
 }

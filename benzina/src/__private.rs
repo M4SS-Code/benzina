@@ -34,7 +34,7 @@ pub mod json {
         serialize::ToSql,
         sql_types,
     };
-    use serde_core::{Serialize, Deserialize};
+    use serde_core::{Deserialize, Serialize};
 
     use crate::json::convert::{sql_deserialize_binary_raw, sql_serialize_binary_raw};
 
@@ -46,7 +46,10 @@ pub mod json {
         pub const EMPTY: Self = Self(Cow::Borrowed(b"{}"));
 
         pub fn serialize(&self, value: &impl Serialize) -> diesel::deserialize::Result<Self> {
-            serde_json::to_vec(value).map(Cow::Owned).map(Self).map_err(Into::into)
+            serde_json::to_vec(value)
+                .map(Cow::Owned)
+                .map(Self)
+                .map_err(Into::into)
         }
 
         pub fn deserialize<T: for<'a> Deserialize<'a>>(&self) -> diesel::deserialize::Result<T> {
@@ -56,7 +59,10 @@ pub mod json {
 
     impl FromSql<sql_types::Jsonb, Pg> for RawJsonb {
         fn from_sql(value: PgValue) -> diesel::deserialize::Result<Self> {
-            sql_deserialize_binary_raw(&value).map(ToOwned::to_owned).map(Cow::Owned).map(Self)
+            sql_deserialize_binary_raw(&value)
+                .map(ToOwned::to_owned)
+                .map(Cow::Owned)
+                .map(Self)
         }
     }
 

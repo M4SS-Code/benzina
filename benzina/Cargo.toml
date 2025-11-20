@@ -22,7 +22,7 @@ features = [
 rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
-diesel = { version = "2.2", default-features = false, optional = true }
+diesel = { version = "2.3", default-features = false, optional = true }
 serde_core = { version = "1.0.221", optional = true }
 serde_json = { version = "1.0.144", optional = true }
 utoipa = { version = "5", optional = true }

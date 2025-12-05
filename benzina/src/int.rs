@@ -227,6 +227,18 @@ macro_rules! from_numbers {
     }
 }
 
+macro_rules! from_primitive_numbers {
+    ($($from:ident => $to:ident),*) => {
+        $(
+            impl From<$from> for $to {
+                fn from(value: $from) -> Self {
+                    Self::new(value.into()).unwrap()
+                }
+            }
+        )*
+    }
+}
+
 impl_numbers! {
     U15 => u16, i16, SmallInt,
     U31 => u32, i32, Integer,
@@ -237,6 +249,15 @@ from_numbers! {
     U15 => U31,
     U15 => U63,
     U31 => U63
+}
+
+from_primitive_numbers! {
+    u8 => U15,
+    u8 => U31,
+    u8 => U63,
+    u16 => U31,
+    u16 => U63,
+    u32 => U63
 }
 
 #[cfg(test)]
@@ -379,6 +400,18 @@ mod tests {
         assert_eq!(U15::new(1000).unwrap(), U15::try_from(1000i16).unwrap());
         assert!(U15::try_from(40000u16).is_err());
         assert!(U15::try_from(-1i16).is_err());
+    }
+
+    #[test]
+    fn test_from_primitive_numbers() {
+        assert_eq!(U15::new(u8::MAX.into()).unwrap(), u8::MAX.into());
+
+        assert_eq!(U31::new(u8::MAX.into()).unwrap(), u8::MAX.into());
+        assert_eq!(U31::new(u16::MAX.into()).unwrap(), u16::MAX.into());
+
+        assert_eq!(U63::new(u8::MAX.into()).unwrap(), u8::MAX.into());
+        assert_eq!(U63::new(u16::MAX.into()).unwrap(), u16::MAX.into());
+        assert_eq!(U63::new(u32::MAX.into()).unwrap(), u32::MAX.into());
     }
 
     #[test]

@@ -18,6 +18,7 @@ features = [
     "example-generated",
     "dangerous-construction",
     "json",
+    "array"
 ]
 rustdoc-args = ["--cfg", "docsrs"]
 

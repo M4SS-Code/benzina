@@ -31,6 +31,8 @@ pub mod example_generated;
 mod int;
 #[cfg(feature = "json")]
 mod json;
+#[cfg(all(feature = "schemars", feature = "postgres"))]
+mod schemars;
 #[cfg(all(feature = "serde", feature = "postgres"))]
 mod serde;
 #[cfg(feature = "postgres")]

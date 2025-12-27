@@ -14,6 +14,7 @@ features = [
     "postgres",
     "mysql",
     "serde",
+    "schemars",
     "typed-uuid",
     "example-generated",
     "dangerous-construction",
@@ -26,6 +27,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 diesel = { version = "2.3", default-features = false, optional = true }
 serde_core = { version = "1.0.221", optional = true }
 serde_json = { version = "1.0.144", optional = true }
+schemars = { version = "1", default-features = false, optional = true }
 utoipa = { version = "5", optional = true }
 benzina-derive = { path = "../benzina-derive", version = "=0.4.4", optional = true }
 uuid = { version = ">=0.7.0, <2.0.0", default-features = false, optional = true }
@@ -47,6 +49,7 @@ typed-uuid = ["postgres", "diesel/uuid", "dep:uuid"]
 mysql = ["benzina-derive?/mysql"]
 
 serde = ["dep:serde_core", "uuid?/serde"]
+schemars = ["dep:schemars"]
 utoipa = ["dep:utoipa"]
 
 example-generated = ["typed-uuid"]

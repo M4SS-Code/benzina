@@ -53,7 +53,7 @@ example-generated = ["typed-uuid"]
 dangerous-construction = ["typed-uuid"]
 
 array = ["postgres"]
-json = ["postgres", "dep:serde_core", "dep:serde_json", "diesel/serde_json"]
+json = ["postgres", "benzina-derive?/json", "dep:serde_core", "dep:serde_json", "diesel/serde_json"]
 ctid = ["postgres", "diesel/i-implement-a-third-party-backend-and-opt-into-breaking-changes"]
 
 [lints]

@@ -67,6 +67,153 @@ mod rename_rule;
 /// # }
 /// ```
 ///
+/// ## Enums with variant-specific data in separate JSONB column
+///
+/// You can also use `benzina::Enum` for enums where each variant holds
+/// associated data. This is useful when you have a PostgreSQL ENUM for the
+/// discriminator and a JSONB column for the variant-specific payload.
+///
+/// ### migration
+///
+/// ```sql
+/// CREATE TYPE animal AS ENUM ('chicken', 'duck', 'oca', 'rabbit');
+///
+/// CREATE TABLE pets (
+///     id SERIAL PRIMARY KEY,
+///     name TEXT NOT NULL,
+///     animal animal NOT NULL,
+///     animal_data JSONB NOT NULL
+/// );
+/// ```
+///
+/// ### Rust enum
+///
+/// ```rust
+/// # use benzina_derive as benzina;
+/// # fn main() {}
+/// use diesel::pg::Pg;
+/// use diesel::{Identifiable, Insertable, Queryable, Selectable};
+/// use serde::{Deserialize, Serialize};
+///
+/// #[derive(Debug, Queryable, Identifiable, Insertable, Selectable)]
+/// #[diesel(table_name = schema::pets, check_for_backend(Pg))]
+/// pub struct Pet {
+///     pub id: i32,
+///     pub name: String,
+///     #[diesel(embed)]
+///     pub animal: Animal,
+/// }
+///
+/// #[derive(Debug, Clone, benzina::Enum)]
+/// #[benzina(
+///     sql_type = schema::sql_types::Animal,
+///     rename_all = "snake_case",
+///     table = schema::pets,
+///     column = animal,
+///     data_column = animal_data
+/// )]
+/// # #[benzina(crate = fake_benzina)]
+/// pub enum Animal {
+///     Chicken(ChickenData),
+///     Duck(DuckData),
+///     #[benzina(rename = "oca")]
+///     Goose(GooseData),
+///     Rabbit(RabbitData),
+/// }
+///
+/// #[derive(Debug, Clone, Serialize, Deserialize)]
+/// pub struct ChickenData {
+///     pub likes_cuddles: bool,
+///     pub breed: String,
+/// }
+///
+/// #[derive(Debug, Clone, Serialize, Deserialize)]
+/// pub struct DuckData {
+///     pub favorite_treat: String,
+///     pub feather_color: String,
+/// }
+///
+/// #[derive(Debug, Clone, Serialize, Deserialize)]
+/// pub struct GooseData {
+///     pub weight_kg: f64,
+///     pub honks_at_strangers: bool,
+/// }
+///
+/// #[derive(Debug, Clone, Serialize, Deserialize)]
+/// pub struct RabbitData {
+///     pub fur_color: String,
+///     pub litter_trained: bool,
+/// }
+///
+/// pub mod schema {
+///     // @generated automatically by Diesel CLI.
+///
+///     pub mod sql_types {
+///         #[derive(diesel::query_builder::QueryId, Clone, diesel::sql_types::SqlType)]
+///         #[diesel(postgres_type(name = "animal"))]
+///         pub struct Animal;
+///     }
+///
+///     diesel::table! {
+///         use diesel::sql_types::*;
+///         use super::sql_types::Animal;
+///
+///         pets (id) {
+///             id -> Int4,
+///             name -> Text,
+///             animal -> Animal,
+///             animal_data -> Jsonb,
+///         }
+///     }
+/// }
+/// #
+/// # mod fake_benzina {
+/// #     pub mod __private {
+/// #         pub use std;
+/// #         pub use diesel;
+/// #
+/// #         pub mod json {
+/// #             use diesel::{
+/// #                 deserialize::{FromSql, FromSqlRow},
+/// #                 expression::AsExpression,
+/// #                 pg::{Pg, PgValue},
+/// #                 serialize::ToSql,
+/// #                 sql_types,
+/// #             };
+/// #             use serde::{Deserialize, Serialize};
+/// #
+/// #             #[derive(Debug, FromSqlRow, AsExpression)]
+/// #             #[diesel(sql_type = sql_types::Jsonb)]
+/// #             pub struct RawJsonb;
+/// #
+/// #             impl RawJsonb {
+/// #                 pub const EMPTY: Self = Self;
+/// #
+/// #                 pub fn serialize(value: &impl Serialize) -> diesel::deserialize::Result<Self> {
+/// #                     unimplemented!()
+/// #                 }
+/// #
+/// #                 pub fn deserialize<T: for<'a> Deserialize<'a>>(&self) -> diesel::deserialize::Result<T> {
+/// #                     unimplemented!()
+/// #                 }
+/// #             }
+/// #
+/// #             impl FromSql<sql_types::Jsonb, Pg> for RawJsonb {
+/// #                 fn from_sql(value: PgValue) -> diesel::deserialize::Result<Self> {
+/// #                     unimplemented!()
+/// #                 }
+/// #             }
+/// #
+/// #             impl ToSql<sql_types::Jsonb, Pg> for RawJsonb {
+/// #                 fn to_sql(&self, out: &mut diesel::serialize::Output<Pg>) -> diesel::serialize::Result {
+/// #                     unimplemented!()
+/// #                 }
+/// #             }
+/// #         }
+/// #     }
+/// # }
+/// ```
+///
 /// [`FromSql`]: https://docs.rs/diesel/latest/diesel/deserialize/trait.FromSql.html
 /// [`ToSql`]: https://docs.rs/diesel/latest/diesel/serialize/trait.ToSql.html
 #[proc_macro_derive(Enum, attributes(benzina))]

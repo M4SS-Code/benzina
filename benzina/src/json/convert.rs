@@ -55,6 +55,15 @@ where
     sql_serialize(value, out)
 }
 
+pub(crate) fn sql_serialize_binary_raw(
+    value: &[u8],
+    out: &mut diesel::serialize::Output<'_, '_, Pg>,
+) -> diesel::serialize::Result {
+    out.write_all(&[1])?;
+    out.write_all(value)?;
+    Ok(IsNull::No)
+}
+
 pub(super) fn sql_deserialize<T>(value: PgValue<'_>) -> diesel::deserialize::Result<T>
 where
     T: DeserializeOwned,
@@ -66,6 +75,13 @@ pub(super) fn sql_deserialize_binary<T>(value: PgValue<'_>) -> diesel::deseriali
 where
     T: DeserializeOwned,
 {
+    let bytes = sql_deserialize_binary_raw(&value)?;
+    serde_json::from_slice(bytes).map_err(Into::into)
+}
+
+pub(crate) fn sql_deserialize_binary_raw<'a>(
+    value: &'a PgValue<'_>,
+) -> diesel::deserialize::Result<&'a [u8]> {
     let (version, bytes) = value
         .as_bytes()
         .split_first()
@@ -75,5 +91,5 @@ where
         return Err("Unsupported JSONB encoding version".into());
     }
 
-    serde_json::from_slice(bytes).map_err(Into::into)
+    Ok(bytes)
 }

@@ -23,6 +23,56 @@ pub fn new_indexmap<K, V>() -> IndexMap<K, V> {
     IndexMap::with_hasher(Hasher::default())
 }
 
+#[cfg(all(feature = "postgres", feature = "json"))]
+pub mod json {
+    use std::borrow::Cow;
+
+    use diesel::{
+        deserialize::{FromSql, FromSqlRow},
+        expression::AsExpression,
+        pg::{Pg, PgValue},
+        serialize::ToSql,
+        sql_types,
+    };
+    use serde_core::{Deserialize, Serialize};
+
+    use crate::json::convert::{sql_deserialize_binary_raw, sql_serialize_binary_raw};
+
+    #[derive(Debug, FromSqlRow, AsExpression)]
+    #[diesel(sql_type = sql_types::Jsonb)]
+    pub struct RawJsonb(Cow<'static, [u8]>);
+
+    impl RawJsonb {
+        pub const EMPTY: Self = Self(Cow::Borrowed(b"{}"));
+
+        pub fn serialize(value: &impl Serialize) -> diesel::deserialize::Result<Self> {
+            serde_json::to_vec(value)
+                .map(Cow::Owned)
+                .map(Self)
+                .map_err(Into::into)
+        }
+
+        pub fn deserialize<T: for<'a> Deserialize<'a>>(&self) -> diesel::deserialize::Result<T> {
+            serde_json::from_slice(&self.0).map_err(Into::into)
+        }
+    }
+
+    impl FromSql<sql_types::Jsonb, Pg> for RawJsonb {
+        fn from_sql(value: PgValue) -> diesel::deserialize::Result<Self> {
+            sql_deserialize_binary_raw(&value)
+                .map(ToOwned::to_owned)
+                .map(Cow::Owned)
+                .map(Self)
+        }
+    }
+
+    impl ToSql<sql_types::Jsonb, Pg> for RawJsonb {
+        fn to_sql(&self, out: &mut diesel::serialize::Output<Pg>) -> diesel::serialize::Result {
+            sql_serialize_binary_raw(&self.0, out)
+        }
+    }
+}
+
 pub mod deep_clone {
     pub trait DeepClone {
         type Output;

@@ -57,17 +57,17 @@ use crate::{U15, U31, U63, error::InvalidArray};
 /// struct UserFlags([bool; 5]);
 ///
 /// // needed by deserialize_as
-/// impl From<benzina::Array<bool, 5>> for UserFlags  {
-///    fn from(value: benzina::Array<bool, 5>) -> Self {
-///        Self(value.into_inner())
-///    }
+/// impl From<benzina::Array<bool, 5>> for UserFlags {
+///     fn from(value: benzina::Array<bool, 5>) -> Self {
+///         Self(value.into_inner())
+///     }
 /// }
 ///
 /// // needed by serialize_as
 /// impl From<UserFlags> for benzina::Array<bool, 5> {
-///    fn from(value: UserFlags) -> Self {
-///        Self::new(value.0)
-///    }
+///     fn from(value: UserFlags) -> Self {
+///         Self::new(value.0)
+///     }
 /// }
 ///
 /// diesel::table! {

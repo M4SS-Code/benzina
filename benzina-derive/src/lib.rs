@@ -5,9 +5,8 @@ use syn::{
     punctuated::Punctuated, token::PathSep,
 };
 
-use crate::join::Join;
-
 use self::enum_derive::Enum;
+use crate::join::Join;
 
 mod enum_derive;
 mod join;

@@ -4,12 +4,11 @@ use proc_macro2::{Span, TokenStream};
 use quote::{ToTokens, quote};
 use syn::{Ident, Index, Token, punctuated::Punctuated};
 
-use crate::join::utils::tuple_from_tokenizables;
-
 use self::{
     quantity::Quantity,
     utils::{Identifiable, NewIndexMap},
 };
+use crate::join::utils::tuple_from_tokenizables;
 
 mod parse;
 mod quantity;

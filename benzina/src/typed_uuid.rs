@@ -7,7 +7,6 @@
 /// The generated structs do not expose any method or trait to create an arbitrary instance[^See note], in
 /// order to provide the guarantee that the `UUID` is valid. However, it is possible to choose to
 /// add traits and methods to customize the behavior.
-///
 #[cfg_attr(
     not(feature = "example-generated"),
     doc = "To see the documentation of a generated typed `UUID`, consider re-building the \

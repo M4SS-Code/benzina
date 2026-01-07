@@ -1,5 +1,8 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
+#[cfg(feature = "derive")]
+pub use benzina_derive::{Enum, join};
+
 #[cfg(feature = "array")]
 pub use self::array::{Array, ArrayWithNullableItems};
 #[cfg(feature = "ctid")]
@@ -12,8 +15,6 @@ pub use self::json::{
     binary::Jsonb,
     nullable::{NullableJson, NullableJsonb},
 };
-#[cfg(feature = "derive")]
-pub use benzina_derive::{Enum, join};
 
 #[doc(hidden)]
 pub mod __private;

@@ -24,7 +24,7 @@ features = [
 rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
-diesel = { version = "2.3", default-features = false, optional = true }
+diesel = { version = "2.3", default-features = false }
 serde_core = { version = "1.0.221", optional = true }
 serde_json = { version = "1.0.144", optional = true }
 schemars = { version = "1", default-features = false, optional = true }
@@ -41,10 +41,10 @@ uuid = { version = ">=0.7.0, <2.0.0", default-features = false, features = ["v4"
 
 [features]
 default = ["derive"]
-derive = ["dep:benzina-derive", "dep:diesel", "dep:indexmap"]
+derive = ["dep:benzina-derive", "dep:indexmap"]
 rustc-hash = ["dep:rustc-hash"]
 
-postgres = ["benzina-derive?/postgres", "dep:diesel", "diesel/postgres_backend"]
+postgres = ["benzina-derive?/postgres", "diesel/postgres_backend"]
 typed-uuid = ["postgres", "diesel/uuid", "dep:uuid"]
 mysql = ["benzina-derive?/mysql"]
 

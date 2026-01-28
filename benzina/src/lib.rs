@@ -7,6 +7,7 @@ pub use benzina_derive::{Enum, join};
 pub use self::array::{Array, ArrayWithNullableItems};
 #[cfg(feature = "ctid")]
 pub use self::ctid::{Ctid, ctid};
+pub use self::either::Either;
 #[cfg(feature = "postgres")]
 pub use self::int::{U15, U31, U63};
 #[cfg(feature = "json")]
@@ -22,6 +23,7 @@ pub mod __private;
 mod array;
 #[cfg(feature = "ctid")]
 mod ctid;
+mod either;
 #[cfg(feature = "postgres")]
 pub mod error;
 #[cfg(feature = "example-generated")]

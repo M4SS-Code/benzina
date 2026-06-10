@@ -9,7 +9,7 @@ use serde_core::{Serialize, de::DeserializeOwned};
 /// Allows using [`deserialize_as`] for benzina [`Json`] and [`Jsonb`] structs.
 ///
 /// [`Jsonb`]: crate::Jsonb
-/// [`Json`]: crate::Jsonb
+/// [`Json`]: crate::Json
 /// [`deserialize_as`]: diesel::prelude::Queryable#deserialize_as-attribute
 #[macro_export]
 macro_rules! json_deserialize_as {

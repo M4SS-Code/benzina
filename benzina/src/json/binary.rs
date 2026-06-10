@@ -22,7 +22,7 @@ use crate::json::convert::{sql_deserialize_binary, sql_serialize_binary};
 /// This type is not intended to be used directly in the model but rather to be
 /// used with diesel [`serialize_as`] and [`deserialize_as`].
 ///
-/// To use [`serialize_as`] you _MUST_ use [`json_deserialize_as`].
+/// To use [`deserialize_as`] you _MUST_ use [`json_deserialize_as`].
 /// ```
 /// use benzina::{Jsonb, U31, json_deserialize_as};
 /// use diesel::{Insertable, Queryable};
@@ -63,7 +63,7 @@ use crate::json::convert::{sql_deserialize_binary, sql_serialize_binary};
 ///     }
 /// }
 ///
-/// // It is NECESSARY to use deserialize_as
+/// // needed by deserialize_as
 /// json_deserialize_as!(UserPermissions);
 /// ```
 ///

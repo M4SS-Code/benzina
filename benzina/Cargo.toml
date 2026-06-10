@@ -30,14 +30,14 @@ serde_json = { version = "1.0.144", optional = true }
 schemars = { version = "1", default-features = false, optional = true }
 utoipa = { version = "5", optional = true }
 benzina-derive = { path = "../benzina-derive", version = "=0.5.1", optional = true }
-uuid = { version = ">=0.7.0, <2.0.0", default-features = false, optional = true }
+uuid = { version = "1.12", default-features = false, optional = true }
 indexmap = { version = "2.10", optional = true }
 rustc-hash = { version = "2.1.1", optional = true }
 
 [dev-dependencies]
 serde = "1.0.221"
 serde_test = "1"
-uuid = { version = ">=0.7.0, <2.0.0", default-features = false, features = ["v4"] }
+uuid = { version = "1.12", default-features = false, features = ["v4"] }
 
 [features]
 default = ["derive"]

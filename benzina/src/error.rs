@@ -55,3 +55,20 @@ impl Display for InvalidArray {
 }
 
 impl Error for InvalidArray {}
+
+#[derive(Debug, Clone)]
+pub enum InvalidBinary {
+    /// The decoded [`bytea`](diesel::sql_types::Binary) value has a length different from the
+    /// one expected by the [`Binary<N>`](crate::Binary) type.
+    UnexpectedLength,
+}
+
+impl Display for InvalidBinary {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Self::UnexpectedLength => "mismatched binary length",
+        })
+    }
+}
+
+impl Error for InvalidBinary {}

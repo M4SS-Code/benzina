@@ -10,7 +10,7 @@ checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
 
 [[package]]
 name = "benzina"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "benzina-derive",
  "diesel",
@@ -27,7 +27,7 @@ dependencies = [
 
 [[package]]
 name = "benzina-derive"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "diesel",
  "heck",

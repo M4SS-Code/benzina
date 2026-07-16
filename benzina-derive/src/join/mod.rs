@@ -333,7 +333,7 @@ impl NoTransformation {
                     {
                         let item = #row;
                         ::benzina::__private::indexmap::map::Entry::or_insert(
-                            ::benzina::__private::IndexMap(&mut accumulator.#accumulator_index, #id),
+                            ::benzina::__private::IndexMap::entry(&mut accumulator.#accumulator_index, #id),
                             item
                         );
                     }

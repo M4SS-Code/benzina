@@ -13,6 +13,11 @@ pub use self::ctid::{Ctid, ctid};
 pub use self::date_eq::{
     ClosedRange, DateEq, DateLike, DateOnly, ExtractedDate, HalfOpenRange, extract_date,
 };
+#[cfg(feature = "postgres")]
+pub use self::date_part::{
+    DateOrTimestamp, DatePartBetween, DatePartEq, DayPart, MonthPart, YearPart, YearRange,
+    extract_day, extract_month, extract_year,
+};
 pub use self::either::Either;
 #[cfg(feature = "postgres")]
 pub use self::int::{U15, U31, U63};
@@ -33,6 +38,8 @@ mod binary;
 mod ctid;
 #[cfg(feature = "postgres")]
 mod date_eq;
+#[cfg(feature = "postgres")]
+mod date_part;
 mod either;
 #[cfg(feature = "postgres")]
 pub mod error;

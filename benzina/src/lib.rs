@@ -9,6 +9,10 @@ pub use self::array::{Array, ArrayWithNullableItems};
 pub use self::binary::Binary;
 #[cfg(feature = "ctid")]
 pub use self::ctid::{Ctid, ctid};
+#[cfg(feature = "postgres")]
+pub use self::date_eq::{
+    ClosedRange, DateEq, DateLike, DateOnly, ExtractedDate, HalfOpenRange, extract_date,
+};
 pub use self::either::Either;
 #[cfg(feature = "postgres")]
 pub use self::int::{U15, U31, U63};
@@ -27,6 +31,8 @@ mod array;
 mod binary;
 #[cfg(feature = "ctid")]
 mod ctid;
+#[cfg(feature = "postgres")]
+mod date_eq;
 mod either;
 #[cfg(feature = "postgres")]
 pub mod error;

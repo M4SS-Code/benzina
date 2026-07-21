@@ -27,6 +27,8 @@ pub use self::json::{
     binary::Jsonb,
     nullable::{NullableJson, NullableJsonb},
 };
+#[cfg(feature = "postgres")]
+pub use self::time_eq::{BareTime, CastToTime, ExtractedTime, TimeEq, TimeLike, extract_time};
 
 #[doc(hidden)]
 pub mod __private;
@@ -57,6 +59,8 @@ mod schemars;
 mod serde;
 #[cfg(feature = "postgres")]
 pub mod sql_types;
+#[cfg(feature = "postgres")]
+mod time_eq;
 #[cfg(feature = "typed-uuid")]
 mod typed_uuid;
 #[cfg(all(feature = "utoipa", feature = "postgres"))]

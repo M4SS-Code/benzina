@@ -239,6 +239,18 @@ macro_rules! from_primitive_numbers {
     }
 }
 
+macro_rules! into_signed_primitive_numbers {
+    ($($from:ident => $to:ident),*) => {
+        $(
+            impl From<$from> for $to {
+                fn from(value: $from) -> Self {
+                    value.get_signed().into()
+                }
+            }
+        )*
+    }
+}
+
 impl_numbers! {
     U15 => u16, i16, SmallInt,
     U31 => u32, i32, Integer,
@@ -258,6 +270,12 @@ from_primitive_numbers! {
     u16 => U31,
     u16 => U63,
     u32 => U63
+}
+
+into_signed_primitive_numbers! {
+    U15 => i32,
+    U15 => i64,
+    U31 => i64
 }
 
 #[cfg(test)]

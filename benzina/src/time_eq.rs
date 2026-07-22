@@ -11,7 +11,9 @@ use diesel::sql_types::{Bool, Nullable, SqlType, Time, Timestamp};
 ///
 /// `Timestamptz` is excluded on purpose: its cast to `time` depends on the
 /// session time zone (the cast is only `STABLE`), so PostgreSQL also
-/// rejects an expression index built on it.
+/// rejects an expression index built on it. Pick the zone explicitly by
+/// converting first: `extract_time(Rome::at(col))` — see
+/// [`TimeZone`](crate::TimeZone).
 ///
 /// Nullable inputs are accepted for filtering (a `NULL` comparison
 /// excludes the row), but [`ExtractedTime`] still claims a non-nullable

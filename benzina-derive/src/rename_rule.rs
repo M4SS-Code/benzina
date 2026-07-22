@@ -19,6 +19,13 @@ pub(crate) enum RenameRule {
 }
 
 impl RenameRule {
+    #[cfg_attr(
+        not(any(feature = "postgres", feature = "mysql")),
+        expect(
+            dead_code,
+            reason = "only the backend implementations format variant names"
+        )
+    )]
     pub(crate) fn format(self, val: &str) -> String {
         match self {
             Self::None => val.to_owned(),

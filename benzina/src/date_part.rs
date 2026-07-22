@@ -13,6 +13,10 @@ use crate::date_eq::DateOnly;
 /// Date/timestamp SQL types accepted by [`extract_year`], [`extract_month`]
 /// and [`extract_day`].
 ///
+/// `Timestamptz` is excluded: its date parts depend on the time zone. Pick
+/// one explicitly by converting first: `extract_year(Rome::at(col))` — see
+/// [`TimeZone`](crate::TimeZone).
+///
 /// Nullable inputs are accepted for filtering (a `NULL` comparison excludes
 /// the row), but the extract expressions still claim a non-nullable
 /// `Integer`, so don't `SELECT` them off a nullable column.

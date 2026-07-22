@@ -6,6 +6,10 @@ pub use benzina_derive::{Enum, join};
 #[cfg(feature = "array")]
 pub use self::array::{Array, ArrayWithNullableItems};
 #[cfg(feature = "postgres")]
+pub use self::at_time_zone::{
+    AtTimeZone, FromInstant, FromUtc, InstantLike, TimeZone, at_time_zone,
+};
+#[cfg(feature = "postgres")]
 pub use self::binary::Binary;
 #[cfg(feature = "ctid")]
 pub use self::ctid::{Ctid, ctid};
@@ -34,6 +38,8 @@ pub use self::time_eq::{BareTime, CastToTime, ExtractedTime, TimeEq, TimeLike, e
 pub mod __private;
 #[cfg(feature = "array")]
 mod array;
+#[cfg(feature = "postgres")]
+mod at_time_zone;
 #[cfg(feature = "postgres")]
 mod binary;
 #[cfg(feature = "ctid")]

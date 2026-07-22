@@ -19,6 +19,8 @@ impl<T: DateOnly> DateOnly for Nullable<T> {}
 ///
 /// `Timestamptz` is excluded on purpose: which instants fall on a calendar
 /// date depends on the session time zone, so no fixed range is correct.
+/// Pick the calendar explicitly by converting first:
+/// `extract_date(Rome::at(col))` — see [`TimeZone`](crate::TimeZone).
 pub trait DateLike: SqlType {
     /// Marker picking the SQL emitted by [`DateEq`]: [`ClosedRange`] for
     /// dates, [`HalfOpenRange`] for timestamps.
@@ -60,7 +62,9 @@ pub struct HalfOpenRange;
 ///   instant of that day, half-open so nothing past midnight is lost
 ///
 /// `Timestamptz` columns are rejected: which instants fall on a calendar
-/// date depends on the session time zone.
+/// date depends on the session time zone. Pick the calendar explicitly by
+/// converting first: `extract_date(Rome::at(col))` — see
+/// [`TimeZone`](crate::TimeZone).
 ///
 /// # Examples
 ///

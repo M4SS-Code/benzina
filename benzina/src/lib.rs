@@ -18,6 +18,7 @@ pub use self::json::{
     binary::Jsonb,
     nullable::{NullableJson, NullableJsonb},
 };
+pub use self::string::Str;
 
 #[doc(hidden)]
 pub mod __private;
@@ -44,6 +45,7 @@ mod schemars;
 mod serde;
 #[cfg(feature = "postgres")]
 pub mod sql_types;
+mod string;
 #[cfg(feature = "typed-uuid")]
 mod typed_uuid;
 #[cfg(all(feature = "utoipa", feature = "postgres"))]

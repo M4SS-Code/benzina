@@ -96,7 +96,7 @@ jobs:
   msrv:
     # The minimum supported Rust version (Cargo.toml rust-version).
     if: forgejo.event_name != 'pull_request' || forgejo.event.pull_request.head.repo.full_name == forgejo.repository
-    name: msrv / 1.86.0
+    name: msrv / 1.88.0
     runs-on: ubuntu-26.04
     timeout-minutes: 25
     steps:
@@ -108,7 +108,7 @@ jobs:
       - name: Rust toolchain
         uses: https://code.m4ss.net/Actions/rust-toolchain@d1031067263f94b142dd6c0ce24c5eb9d02d52a0 # master
         with:
-          toolchain: 1.86.0
+          toolchain: 1.88.0
 
       - name: Cache
         uses: https://code.m4ss.net/Actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -117,9 +117,9 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: rust-1.86.0-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
+          key: rust-1.88.0-${{ runner.arch }}-${{ hashFiles('Cargo.lock') }}
           restore-keys: |
-            rust-1.86.0-${{ runner.arch }}-
+            rust-1.88.0-${{ runner.arch }}-
 
       - name: cargo test
         run: cargo test --locked --all-features
